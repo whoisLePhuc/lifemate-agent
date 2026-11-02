@@ -11,7 +11,7 @@ Ngày kiểm tra: 02/11/2026. Chưa stage, commit hoặc push thay đổi trong 
 - [Hướng dẫn baseline](TEXT_BASELINE.md), [phân tích](BASELINE_ANALYSIS.md), README và kế hoạch workspace phản ánh run 04 đã hoàn tất. Lịch sử tải lỗi/run dừng nằm trong phần lịch sử thử nghiệm, không còn được mô tả là tiến trình đang chạy.
 - [Tóm tắt aggregate](Results/text-baseline-v0.1.json) lưu model revision, fingerprints, phiên bản môi trường, cấu hình, lệnh chạy và số liệu 309 dev; không chứa sample IDs, transcript, arguments, app state hoặc đường dẫn cá nhân.
 - [Dependency pins](../requirements-baseline-windows-py312.lock.txt) khớp venv đã dùng; requirements trực tiếp pin rõ CUDA build. Đây là snapshot Windows/Python 3.12, chưa phải lock cho Docker/A30.
-- `download_ranges.py` giữ ở Experiments làm công cụ xử lý sự cố; không đưa vào inference hoặc package agent.
+- Công cụ tải range trước đây chỉ phục vụ xử lý sự cố; sau khi dọn các thử nghiệm đã tích hợp, công cụ đã bỏ khỏi cây làm việc và còn trong Git history. Không đưa vào inference.
 
 ## Bằng chứng kiểm tra
 

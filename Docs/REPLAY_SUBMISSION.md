@@ -1,6 +1,6 @@
 # Replay train và Submission Writer
 
-> Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
+> Các đường dẫn `../Outputs/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 ## Hai chức năng riêng
 
@@ -74,7 +74,7 @@ CLI BTC tự mở một phiên/mẫu chỉ để kiểm tra allowlist/schema tro
 
 ## Bằng chứng thử nghiệm
 
-Python 3.13.12, kit v3.2.0, schema 2.7.0. Thử nghiệm nguồn: `../Experiments/003-replay-submission` trong workspace.
+Python 3.13.12, kit v3.2.0, schema 2.7.0. Thử nghiệm nguồn: [lịch sử triển khai](IMPLEMENTATION_HISTORY.md) trong workspace.
 
 - 8 tests mới: round-trip tiếng Việt/newline, bảo toàn call, thiếu/trùng/sai ID, cấu trúc/hash/JSON, không ghi đè kể cả race publish, abort khi lỗi, phát hiện file hỏng, đối chiếu app thay đổi và không thay đổi.
 - Replay ban đầu: 1.545/1.545 mẫu khớp ledger, results và full state; 3.541 calls; 1.535/1.535 label-app khớp; 0 schema rejection.

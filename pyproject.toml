@@ -11,7 +11,7 @@ dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src", "."]
-include = ["lifemate", "lifemate.*", "lifemate_data", "lifemate_tools", "lifemate_output", "lifemate_agent", "lifemate_evaluation", "training", "evaluation"]
+include = ["lifemate", "lifemate.*", "training", "evaluation"]
 
 [project.scripts]
 lifemate = "lifemate.cli:main"

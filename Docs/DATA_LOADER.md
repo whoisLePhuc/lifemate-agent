@@ -1,6 +1,6 @@
 # Data Loader
 
-> Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
+> Các đường dẫn `../Outputs/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 Read-only loader for the organisers' JSONL and catalogs. No external runtime dependencies. Tested with Python 3.13.12; source targets Python 3.10+. The loader does not import ToolEnv or open environment files.
 
@@ -37,6 +37,6 @@ This is a metadata contract layer, not a full tool-argument validator, ASR syste
 
 ## Verification and provenance
 
-Source experiment: `../Experiments/001-data-loader/README.md` in the research workspace. Initial real-data report: `../Outputs/001-data-loader/run-20261102-01/report.json`. Organiser kit v3.2.0 / catalog 2.7.0; 1,545 train and 634 public records passed metadata validation. Ten synthetic contract tests passed before integration. No gold replay, ToolEnv lifecycle or model quality has been verified by these checks.
+Source experiment: [lịch sử triển khai](IMPLEMENTATION_HISTORY.md) in the research workspace. Initial real-data report: `../Outputs/001-data-loader/run-20261102-01/report.json`. Organiser kit v3.2.0 / catalog 2.7.0; 1,545 train and 634 public records passed metadata validation. Ten synthetic contract tests passed before integration. No gold replay, ToolEnv lifecycle or model quality has been verified by these checks.
 
 The integrated source also passed all ten tests and the complete two-split check. Report: `../Outputs/001-data-loader/run-20261102-02-integrated/report.json`; test log: `../Outputs/001-data-loader/run-20261102-01/integrated-tests.txt`.

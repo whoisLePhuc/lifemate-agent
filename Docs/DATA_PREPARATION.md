@@ -71,4 +71,4 @@ Gói BTC v3.2.0, catalog 2.7.0; báo cáo tại `Outputs/004-train-dev-split/run
 
 34/34 tests tích hợp đạt (bao gồm 1 test runtime opt-in khi đặt LIFEMATE_DATA_ROOT); log `Outputs/004-train-dev-split/verification-20261102/tests.txt`. Sáu tests mới kiểm tra Unicode/trùng text, quan hệ history bắc cầu, audio/near-text, split disjoint và tái lập, thứ tự input, WAV bị cắt cụt. Nếu không bật biến môi trường cho test runtime, test đó được skip.
 
-Mã thử nghiệm và lệnh gốc: `Experiments/004-train-dev-split/README.md` trong workspace. Mã preparation đã tích hợp khớp snapshot đã chạy; chưa có LLM baseline hoặc điểm dev.
+Mã thử nghiệm và lệnh gốc: [lịch sử triển khai](IMPLEMENTATION_HISTORY.md) trong workspace. Mã preparation đã tích hợp vào repo agent. Kết quả baseline hiện hành xem [phân tích](BASELINE_ANALYSIS.md); các số liệu trên là kiểm tra preparation tại thời điểm thực hiện.

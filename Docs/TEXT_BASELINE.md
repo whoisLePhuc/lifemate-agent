@@ -2,7 +2,7 @@
 
 > Mã đã được tổ chức theo [kiến trúc mới](REFACTOR_ARCHITECTURE.md). Các lệnh script dưới đây vẫn tương thích; CLI thống nhất là `python -m lifemate.cli text-baseline ...`. Kết quả run 04 là baseline lịch sử, không được đo lại trong lần refactor.
 
-> Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
+> Các đường dẫn `../Outputs/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 ## Trạng thái hiện tại
 
@@ -97,4 +97,4 @@ Bỏ `--verify-gold-hashes` nếu chỉ phân tích call/report. Khi bật, eval
 - Run 03: chunked prefill, 3 mẫu thật, trung bình 14,73 s; chỉ là smoke GPU.
 - Run 04: đủ 309 mẫu thật; controller mean 11,95 s, p95 29,70 s, max 29,78 s. Không tính model loading/evaluator. Kết quả và giới hạn trong bản tóm tắt Git.
 
-Công cụ tải theo range chỉ là xử lý sự cố trong Experiments. Lượt tải CUDA theo range đã timeout; không còn tiến trình thiết lập chờ chạy. Thư viện sau đó được người dùng cài và CUDA đã xác minh. Backend đã kiểm tra prefill chia đoạn so nguyên khối trên Qwen3 nhỏ (max logit difference khoảng 5,96e-08); chưa khẳng định bitwise reproducible trên mọi GPU/kernel.
+Công cụ tải theo range trước đây chỉ dùng xử lý sự cố; source lịch sử còn trong Git và công cụ đã được bỏ khỏi cây làm việc. Lượt tải CUDA theo range đã timeout; không còn tiến trình thiết lập chờ chạy. Thư viện sau đó được người dùng cài và CUDA đã xác minh. Backend đã kiểm tra prefill chia đoạn so nguyên khối trên Qwen3 nhỏ (max logit difference khoảng 5,96e-08); chưa khẳng định bitwise reproducible trên mọi GPU/kernel.

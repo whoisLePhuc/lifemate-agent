@@ -1,6 +1,6 @@
 # Phân tích baseline text trên 309 mẫu dev
 
-> Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
+> Các đường dẫn `../Outputs/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 Ngày phân tích: 02/11/2026. Model Qwen3-4B-Instruct-2507, chưa fine-tune theo LifeMate; transcript chuẩn lượt cuối và user history, không có lỗi ASR trong đầu vào. Đây là đánh giá toàn pipeline prompt/planner/controller/backend, không tách riêng năng lực model.
 

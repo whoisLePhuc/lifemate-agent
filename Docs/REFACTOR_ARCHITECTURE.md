@@ -35,7 +35,9 @@ tests/{unit,contract,integration}/
 | `scripts/prepare_data.py` | `training/prepare_data.py`, script cũ là wrapper |
 | `scripts/replay_train.py`, `scripts/run_text_baseline.py` | Runner trong `evaluation`, script cũ là wrapper |
 
-Các package `lifemate_*` ở `src` chỉ là import aliases, không giữ bản sao implementation hoặc registry ToolEnv riêng. Alias và canonical path trả cùng class object. Điều này giữ các import công khai đã dùng bởi snapshots Experiments. Các monkey-patch vào chi tiết private của module cũ không phải API tương thích; tests hiện tại patch đường dẫn canonical.
+Năm package tương thích `lifemate_agent`, `lifemate_data`, `lifemate_evaluation`, `lifemate_output`, `lifemate_tools` đã được xóa khỏi source và cấu hình đóng gói. Bảng trên là hướng dẫn chuyển import cũ sang canonical; các tên cũ không còn import được. Không giữ hai cấu trúc song song.
+
+Experiments 001–005 đã được xóa sau khi tích hợp đầy đủ mã/tests/ghi chú vào repo agent. Xem [lịch sử triển khai](IMPLEMENTATION_HISTORY.md) để tìm bằng chứng và lệnh thay thế. Không còn wrapper hoặc bản sao source trong các thư mục thử nghiệm cũ; kết quả baseline và Git history vẫn được giữ. Các workflow `scripts/*.py` của repo agent vẫn nhận arguments cũ.
 
 ## Chạy từ source và từ package
 
@@ -51,7 +53,7 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
-Đặt cả `src` và repo root trên PYTHONPATH vì `training` và `evaluation` là các package ở root. Khi chạy snapshot cũ từ thư mục khác, dùng cùng hai đường dẫn tuyệt đối hoặc cài package trong môi trường chạy snapshot. Không cần sửa snapshot.
+Đặt cả `src` và repo root trên PYTHONPATH vì `training` và `evaluation` là các package ở root. Chạy workflow từ repo agent với hai đường dẫn src và root; không cần thư mục thử nghiệm cũ hoặc import alias.
 
 Editable install trong môi trường đã có pip:
 
@@ -81,11 +83,17 @@ Không chuyển inference sang evaluator; gold/reference vẫn chỉ ở phía �
 
 Tính từ workspace root: `Outputs/refactor-architecture/run-20261102-01/`.
 
-- `tests.txt`: **49/49 tests đạt**, gồm 47 tests đã có và 2 kiểm tra alias/contracts/prompt.
+- `tests.txt`: **49/49 tests đạt**, gồm các kiểm tra logic đã có và kiểm tra package cũ không import được, contracts/prompt.
 - `behavior-ast.json`: 9 định nghĩa lõi (controller, parser, context, messages, LocalPlanner, loader, adapter, Writer/checks) có AST giống commit baseline trước refactor, bỏ qua vị trí file.
 - `smoke/report.json`: 3 mẫu finish-only qua CLI mới; đây là plumbing, không phải LLM quality.
 - `replay/report.json`: 1.545/1.545 train khớp state/call/results, 3.541 calls.
 - `verification.json`: analysis qua CLI mới bằng báo cáo gốc (109 hash matches, 82 raw-state, 30 exact calls); wheel import và bốn workflow CLI hoạt động từ thư mục giải nén độc lập source.
-- Wheel đóng gói có `lifemate`, `training`, `evaluation` và các shim tương thích; không có dữ liệu/model/outputs.
+- Wheel đóng gói có `lifemate`, `training`, `evaluation`; không có shim, dữ liệu/model/outputs trong bản build sau khi xóa aliases.
 
-Snapshots `Experiments` được giữ nguyên. Mục 14 đã cập nhật để mô tả cấu trúc thật, phân biệt phần đang có với kế hoạch tương lai. Việc commit được thực hiện riêng theo yêu cầu sau khi kiểm tra; không tự push lên remote.
+Các thử nghiệm 001–005 đã được loại bỏ khỏi cây làm việc sau tích hợp; bằng chứng baseline lịch sử được giữ nguyên. Mục 14 đã cập nhật để mô tả cấu trúc thật, phân biệt phần đang có với kế hoạch tương lai. Việc commit được thực hiện riêng theo yêu cầu sau khi kiểm tra; không tự push lên remote.
+
+## Xóa lớp tương thích sau refactor
+
+Các tên import cũ đã được loại bỏ theo yêu cầu. Chỉ giữ `lifemate`, `training`, `evaluation`. Script CLI ở `scripts/` là entry point workflow, không phải các package cũ được giữ lại. Bằng chứng kiểm tra mới lưu tại `Outputs/remove-legacy-packages/run-20261102-01/` tính từ workspace root; bằng chứng refactor trước đó vẫn được giữ nguyên như lịch sử.
+
+Sau khi xóa: 49/49 tests đạt, smoke 3 mẫu qua CLI mới đạt; wheel build sạch không chứa năm package cũ, bốn workflow CLI của wheel vẫn hoạt động. Không chạy lại LLM hoặc đổi baseline outputs. Các thay đổi dọn package và hợp nhất ghi chú được commit riêng theo yêu cầu; không tự push lên remote.

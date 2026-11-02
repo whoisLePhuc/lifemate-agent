@@ -75,4 +75,4 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
-The old `scripts/*.py` commands and legacy import aliases remain available for archived experiments. No baseline prompt, inference parameters or model weights were changed in the structural refactor.
+The old `scripts/*.py` commands remain available. Legacy `lifemate_*` packages have been removed; use canonical imports. Archived experiments require their recorded implementation version (see the migration guide). No baseline prompt, inference parameters or model weights were changed in the structural refactor.

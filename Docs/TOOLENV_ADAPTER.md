@@ -1,6 +1,6 @@
 # ToolEnv Adapter
 
-> Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
+> Các đường dẫn `../Outputs/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 Adapter nối controller với `zaic_tools` chính thức. Không có dependency ngoài thư viện chuẩn Python; đã chạy kiểm tra bằng Python 3.13.12. Mã dùng cú pháp Python 3.10+ nhưng chưa chạy trên mọi phiên bản.
 
@@ -96,7 +96,7 @@ python scripts/check_adapter.py --data-root 'D:\Projects\lifemate-workspace\Data
 
 ## Bằng chứng đã có
 
-Thử nghiệm nguồn: `../Experiments/002-toolenv-adapter/` trong workspace; kit `v3.2.0`, catalog `2.7.0`.
+Thử nghiệm nguồn: [lịch sử triển khai](IMPLEMENTATION_HISTORY.md) trong workspace; kit `v3.2.0`, catalog `2.7.0`.
 
 - 9 unit tests adapter đạt; 10 unit tests Data Loader hiện có vẫn cần duy trì.
 - 1 contract test runtime thật đạt: validate không ghi call; dispatch sai schema có trong submission; finalize chặn call mới.
