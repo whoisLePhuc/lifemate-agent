@@ -7,6 +7,8 @@ COMMANDS = {
     'replay-train': 'evaluation.replay_train',
     'text-baseline': 'evaluation.run_text_baseline',
     'analyze-run': 'evaluation.analysis',
+    'replay-predictions': 'evaluation.replay_predictions',
+    'evaluate-run': 'evaluation.evaluate_run',
 }
 
 def main():

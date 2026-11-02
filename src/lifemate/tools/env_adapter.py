@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import re
 import sys
+import time
 from threading import RLock
 from typing import Callable
 
@@ -174,8 +175,13 @@ class ToolEnvAdapter:
             if self._record is not None:
                 return deepcopy(self._record)
             self._active()
+            started = time.perf_counter()
             calls = self._read_calls()
+            calls_seconds = time.perf_counter() - started
+            started = time.perf_counter()
             state_hash = self._invoke("get_state_hash")
+            self.last_finalize_metrics = {'ledger_seconds': calls_seconds,
+                                          'hash_seconds': time.perf_counter() - started}
             if not isinstance(state_hash, str) or not state_hash:
                 self._status = "broken"
                 raise RuntimeFailure("invalid runtime state hash")

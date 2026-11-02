@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-02",
+  "implementation": "Evaluation & Trace v2",
+  "baseline_submission_sha256": "e6e48aa64bf694e61b2e6111f70bd3b93650c7d4fbdc4e3c38d75cac1d9c47b1",
+  "official_score": false,
+  "baseline": {
+    "samples": 309,
+    "mean_local_score": 0.15520881491755278,
+    "hash_matches": 109,
+    "matched_calls": 206,
+    "gold_calls": 705,
+    "predicted_calls": 862,
+    "positive_score_samples": 62
+  },
+  "prediction_replay": {
+    "samples": 309,
+    "hashes_reproduced": 309,
+    "ledger_matches": 309,
+    "schema_rejections": 0,
+    "business_failures": 40
+  },
+  "scorer_version": "lifemate-local-fuzzy-v1",
+  "conventions": {
+    "certified_by_organisers": false,
+    "normalization": "Unicode NFC then lowercase; accents preserved",
+    "tokenization": "Python str.split (whitespace); punctuation preserved",
+    "token_f1": "multiset overlap; both empty=1; one empty=0",
+    "fuzzy_threshold": "strictly greater than 0.6",
+    "argument_keys": "identical sets; no implicit defaults",
+    "arrays": "ordered; recursive item schema",
+    "matching": "maximum cardinality one-to-one bipartite matching",
+    "limitations": "Tokenization, empty strings and nested arguments need organiser conformance."
+  },
+  "legacy_analysis_identical": true,
+  "gpu_smoke": {
+    "samples": 3,
+    "records_identical_to_original": 3,
+    "trace_events": 80,
+    "decisions": 13,
+    "calls": 9,
+    "finish_reasons": {
+      "eos": 13
+    },
+    "trace_audit": {
+      "valid": true,
+      "samples": 3,
+      "issues": []
+    }
+  },
+  "tests": {
+    "command": "python -m unittest discover -s tests -v",
+    "official_runtime_contract_enabled": true,
+    "run": 62,
+    "failed": 0,
+    "skipped": 0
+  },
+  "notes": [
+    "No model weights, SYSTEM prompt, action protocol or configured generation/controller budgets changed.",
+    "Trace flush/fsync has runtime overhead; 3-record equality does not prove full-dev equivalence near deadlines.",
+    "Local fuzzy conventions are explicit and not organiser-certified.",
+    "Run 04 remains the historical baseline; its executed source commit is not retroactively assigned."
+  ],
+  "packaging": {
+    "cli_checks": [
+      {
+        "command": "evaluate-run",
+        "exit_code": 0
+      },
+      {
+        "command": "replay-predictions",
+        "exit_code": 0
+      },
+      {
+        "command": "text-baseline",
+        "exit_code": 0
+      }
+    ],
+    "evaluation_samples": 3,
+    "ancestor_git_not_claimed": true,
+    "required_modules_match_source": true
+  }
+}

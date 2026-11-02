@@ -51,7 +51,9 @@ Audio audit and a fixed grouped train/dev split are available: [data preparation
 
 A text-agent controller, offline Transformers backend and frozen-dev evaluation runner are implemented: [text baseline](Docs/TEXT_BASELINE.md). The real-model run on all 309 dev samples is complete: 109 canonical hash matches, 82 raw-state matches, and 30 exact full-call matches. These are diagnostic metrics, not the official competition score. See [analysis](Docs/BASELINE_ANALYSIS.md) and the [aggregate baseline record](Docs/Results/text-baseline-v0.1.json).
 
-ASR, the competition scorer and a complete competition deployment are not yet implemented.
+Independent prediction replay, a schema-aware **local fuzzy scorer** and per-decision traces are available: [Evaluation & Trace v2](Docs/EVALUATION_TRACE.md). All 309 baseline prediction hashes/ledgers reproduce; the mean local score is 0.1552 under documented conventions. This scorer is not certified against the organisers' scorer. A 3-sample real-GPU trace run reproduces the original records.
+
+ASR, organiser-scorer conformance and a complete competition deployment are not yet implemented.
 
 ## Data and Submission
 
@@ -72,6 +74,8 @@ From this repository in PowerShell:
 $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m lifemate.cli --help
 .venv/Scripts/python.exe -m lifemate.cli text-baseline --help
+.venv/Scripts/python.exe -m lifemate.cli evaluate-run --help
+.venv/Scripts/python.exe -m lifemate.cli replay-predictions --help
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
