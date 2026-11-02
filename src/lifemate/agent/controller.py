@@ -2,17 +2,29 @@ import time
 
 from lifemate.contracts import Outcome
 from .protocol import build_messages, parse_output, system_prompt, tool_schemas
+from .policy import GroundedPolicy
 
 
 def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_calls=8, max_repairs=2,
-                   trace=None, protocol='custom_json'):
-    system_prompt(protocol)
+                   trace=None, protocol='custom_json',policy='off'):
+    system_prompt(protocol,policy)
+    guard=GroundedPolicy(payload) if policy!='off' else None
     planner_kwargs={'tools':tool_schemas(payload)} if protocol=='qwen_native' else {}
     start=time.monotonic(); deadline=start+seconds
     events=[]; errors=calls=decisions=0; stop='max_decisions'
     allowed={t['name'] for t in payload['tools']}
     def emit(event, **fields):
         if trace is not None: trace(event, decision=decisions, **fields)
+    def policy_check(action):
+        nonlocal errors
+        if guard is None:return True
+        verdict=guard.inspect(action)
+        emit('policy_check',action=action,verdict=verdict)
+        if verdict['ok']:return True
+        guard.blocked(action,verdict)
+        errors+=1
+        events.append({'policy_error':verdict['issues'],'executed':False})
+        return False
     for _ in range(max_decisions):
         remaining=deadline-time.monotonic()
         if remaining <= .5: stop='deadline'; break
@@ -20,7 +32,9 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         emit('decision_start', remaining_seconds=remaining, calls=calls, errors=errors)
         generation_start=time.perf_counter()
         try:
-            raw=planner.generate(build_messages(payload,events,protocol), remaining-.3, **planner_kwargs)
+            model_payload=payload if guard is None else {
+                **{k:payload[k] for k in ('request','context','history','tools')},'controller_context':guard.summary()}
+            raw=planner.generate(build_messages(model_payload,events,protocol,policy), remaining-.3, **planner_kwargs)
         except TimeoutError as error:
             emit('generation', raw_output=getattr(planner,'last_generation',{}).get('partial_output'),
                  error_type=type(error).__name__, error_category='deadline',
@@ -53,7 +67,11 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
             if errors>max_repairs: stop='invalid_action'; break
             continue
         emit('parsed_action', action=action)
-        if action['type']=='finish': stop='finished'; break
+        if action['type']=='finish':
+            if not policy_check(action):
+                if errors>max_repairs:stop='policy_limit';break
+                continue
+            stop='finished'; break
         if calls >= max_calls: stop='max_calls'; break
         validation_start=time.perf_counter()
         if action['name'] not in allowed:
@@ -62,11 +80,15 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         emit('validation', action=action, result=valid,
              elapsed_seconds=time.perf_counter()-validation_start)
         if not valid['ok']:
+            if guard is not None:guard.validation_failed(action)
             errors+=1
             feedback={'action':action,'validation_error':valid.get('error')}
             if protocol=='qwen_native': feedback['raw_output']=raw
             events.append(feedback)
             if errors>max_repairs: stop='validation_limit'; break
+            continue
+        if not policy_check(action):
+            if errors>max_repairs:stop='policy_limit';break
             continue
         emit('call_start', action=action, call_index=calls)
         call_start=time.perf_counter()
@@ -82,6 +104,9 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
              business_failure=observation.get('ok') is True and observation.get('done') is False,
              elapsed_seconds=time.perf_counter()-call_start)
         events.append({'action':action,'observation':observation})
+        if guard is not None:
+            guard.observe(action,observation)
+            emit('progress_update',summary=guard.summary())
         if action['name']=='sys.ask_missing_info' and observation.get('ok'):
             stop='asked_missing_info'; break
     outcome=Outcome(stop,time.monotonic()-start,decisions,errors,calls)

@@ -10,6 +10,7 @@ COMMANDS = {
     'replay-predictions': 'evaluation.replay_predictions',
     'evaluate-run': 'evaluation.evaluate_run',
     'compare-protocols': 'evaluation.compare_protocols',
+    'compare-policies': 'evaluation.compare_policies',
 }
 
 def main():

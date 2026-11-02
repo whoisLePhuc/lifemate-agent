@@ -59,6 +59,10 @@ An optional Qwen native tool-calling mode and a paired training diagnostic runne
 
 On a paired 16-sample training diagnostic, native reduced format/validation errors (7 to 1) but lowered the mean local score (0.31875 to 0.21875). Both modes passed trace and independent replay checks. Native has not been promoted or evaluated on the full dev set.
 
+An opt-in `grounded_v1` controller policy is available for custom JSON: [evidence, clarification and progress policy](Docs/GROUNDED_POLICY.md). It adds bounded reference/money/date checks, clarification feedback, failed-action tracking and repeat guards. Default remains `--policy off`; the heuristic policy has known coverage gaps and is not a proof of semantic correctness.
+
+On the same 16 training diagnostic samples, policy improved ask-tool presence from 0/4 to 4/4, with one false positive, and reduced business-failure calls from 12 to 2. Mean local score decreased from 0.31875 to 0.28125; the policy has not been promoted. Train gold-prefix coverage also exposes valid trajectories that the heuristic guard rejects.
+
 ## Data and Submission
 
 - Competition datasets and model weights are not included in this repository.
@@ -81,6 +85,7 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m lifemate.cli evaluate-run --help
 .venv/Scripts/python.exe -m lifemate.cli replay-predictions --help
 .venv/Scripts/python.exe -m lifemate.cli compare-protocols --help
+.venv/Scripts/python.exe -m lifemate.cli compare-policies --help
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 

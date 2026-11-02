@@ -1,0 +1,158 @@
+{
+  "comparison": "policy",
+  "samples": 16,
+  "partition": "train",
+  "official_score": false,
+  "off": {
+    "mean_local_score": 0.31875,
+    "hash_matches": 11,
+    "predicted_calls": 47,
+    "matched_calls": 11,
+    "stop_reasons": {
+      "finished": 12,
+      "invalid_action": 2,
+      "max_calls": 2
+    },
+    "controller_errors_total": 7,
+    "latency_seconds": {
+      "mean": 13.031312500002969,
+      "p50": 13.360000000044238,
+      "p95": 26.40600000001723,
+      "max": 28.89100000000326
+    }
+  },
+  "grounded_v1": {
+    "mean_local_score": 0.28125,
+    "hash_matches": 9,
+    "predicted_calls": 40,
+    "matched_calls": 14,
+    "stop_reasons": {
+      "asked_missing_info": 5,
+      "deadline": 1,
+      "policy_limit": 3,
+      "finished": 7
+    },
+    "controller_errors_total": 15,
+    "latency_seconds": {
+      "mean": 13.30375000001004,
+      "p50": 16.68800000002375,
+      "p95": 29.5,
+      "max": 29.76600000000326
+    }
+  },
+  "improved_samples": 2,
+  "regressed_samples": 4,
+  "unchanged_samples": 10,
+  "limitations": [
+    "Training diagnostic, not held-out dev or full-dev quality estimate.",
+    "Policy prompt, evidence guards and progress feedback change together.",
+    "Same model path/metadata, not a fresh checksum of all weight shards.",
+    "Custom runs first; timing is diagnostic, not a controlled speed benchmark."
+  ],
+  "selection": {
+    "seed": 42,
+    "samples": 16,
+    "partition": "train",
+    "distribution": {
+      "ask": 4,
+      "out_of_scope": 4,
+      "single": 4,
+      "multi": 4
+    },
+    "note": "Gold is used only to stratify diagnostic selection, never passed to the planner."
+  },
+  "posthoc_reporting_source_sha256": "772fee37b97ed3bd4391f540a1a08102af3eb30d16410c95527e5fc34ee135ba",
+  "schema_version": 1,
+  "date": "2026-11-02",
+  "verification": {
+    "tests": 88,
+    "failed": 0,
+    "skipped": 0,
+    "wheel_modules_match_source": true,
+    "wheel_cli_help": true,
+    "wheel_finish_only_smoke_samples": 3,
+    "wheel_trace_audit": {
+      "valid": true,
+      "samples": 3,
+      "issues": []
+    },
+    "ancestor_git_not_claimed": true,
+    "final_wheel_modules_match_source": true,
+    "final_tests": 88,
+    "posthoc_reporting_label_only": true
+  },
+  "diagnostics": {
+    "off": {
+      "ask_presence": {
+        "tp": 0,
+        "fn": 4,
+        "fp": 0
+      },
+      "policy_blocked_proposals": 0,
+      "policy_issue_counts": {},
+      "parse_errors": 7,
+      "schema_validation_errors": 0,
+      "actual_calls": 47,
+      "business_failure_calls": 12,
+      "replay_hashes_reproduced": 16,
+      "replay_ledger_matches": 16,
+      "trace_audit": {
+        "valid": true,
+        "samples": 16,
+        "issues": []
+      }
+    },
+    "grounded_v1": {
+      "ask_presence": {
+        "tp": 4,
+        "fn": 0,
+        "fp": 1
+      },
+      "policy_blocked_proposals": 15,
+      "policy_issue_counts": {
+        "ambiguous_reference": 5,
+        "ungrounded_id": 1,
+        "ungrounded_amount": 6,
+        "no_progress_repeat": 3
+      },
+      "parse_errors": 0,
+      "schema_validation_errors": 0,
+      "actual_calls": 40,
+      "business_failure_calls": 2,
+      "replay_hashes_reproduced": 16,
+      "replay_ledger_matches": 16,
+      "trace_audit": {
+        "valid": true,
+        "samples": 16,
+        "issues": []
+      }
+    },
+    "off_records_identical_to_previous_custom": 16
+  },
+  "teacher_forced_coverage": {
+    "partition": "train",
+    "samples": 1236,
+    "gold_actions": 2836,
+    "gold_ask_actions": 163,
+    "samples_with_blocked_gold_action": 124,
+    "blocked_gold_actions": 149,
+    "issue_counts": {
+      "ungrounded_amount": 77,
+      "ungrounded_or_ambiguous_phone": 20,
+      "ambiguous_reference": 20,
+      "relative_date_mismatch": 3,
+      "no_progress_repeat": 2,
+      "invalid_ask_fields": 3,
+      "ungrounded_id": 15,
+      "lookup_before_asking": 10
+    },
+    "method": "Teacher-forced gold prefixes; coverage diagnostic, not closed-loop model quality.",
+    "toolenv_instances": 0
+  },
+  "decision": "Keep policy off as default; grounded_v1 improves clarification in the train diagnostic but overall local score decreases and gold-prefix coverage has gaps.",
+  "model": {
+    "id": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+  },
+  "cancelled_run_note": "Run 01 was interrupted before paired completion and is not used in these metrics."
+}

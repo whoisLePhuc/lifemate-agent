@@ -19,6 +19,7 @@ from lifemate.output.writer import SubmissionWriter, validate_submission
 from lifemate.agent.controller import run_controller
 from lifemate.context.manager import text_input
 from lifemate.agent.protocol import PROTOCOLS, system_prompt
+from lifemate.agent.policy import POLICIES
 from lifemate.observability.provenance import collect_provenance
 from lifemate.observability.trace import TraceWriter, audit_trace, fingerprint
 
@@ -33,6 +34,7 @@ def main(argv=None):
     p.add_argument('--limit',type=int)
     p.add_argument('--seconds',type=float,default=30)
     p.add_argument('--protocol',choices=PROTOCOLS,default='custom_json')
+    p.add_argument('--policy',choices=POLICIES,default='off')
     p.add_argument('--partition',choices=['train','dev'],default='dev')
     p.add_argument('--ids-file',type=Path,help='JSON list of IDs restricted to the selected partition')
     args=p.parse_args(argv)
@@ -61,9 +63,9 @@ def main(argv=None):
         if len(selected)!=len(set(selected)) or not set(selected)<=set(partition_ids):p.error('IDs must be unique and inside the selected partition')
         chosen=sorted(selected)
     if not chosen:p.error('empty selected set')
-    prompt=system_prompt(args.protocol)
+    prompt=system_prompt(args.protocol,args.policy)
     provenance=collect_provenance(Path(__file__).resolve().parents[1],
-        config={'workflow':'text-baseline','protocol':args.protocol,'partition':args.partition,'seed':42,'seconds':args.seconds,
+        config={'workflow':'text-baseline','protocol':args.protocol,'policy':args.policy,'partition':args.partition,'seed':42,'seconds':args.seconds,
                 'max_decisions':12,'max_calls':8,'max_repairs':2,'context_tokens':16384,'new_tokens':384,
                 'decoding':'greedy','dtype':'bfloat16','attention':'sdpa',
                 'smoke_finish_only':args.smoke_finish_only,'chosen_ids_sha256':fingerprint(chosen),
@@ -96,7 +98,7 @@ def main(argv=None):
             with TrainReplaySession(root,item.id) as env:
                 controller_start=time.monotonic()
                 try:
-                    outcome=run_controller(payload,env,planner,seconds=args.seconds,trace=emit,protocol=args.protocol)
+                    outcome=run_controller(payload,env,planner,seconds=args.seconds,trace=emit,protocol=args.protocol,policy=args.policy)
                     failure=None
                 except (ValueError,RuntimeError) as error:
                     # Hashing after an indeterminate runtime failure will raise: no fake record.
@@ -143,7 +145,7 @@ def main(argv=None):
     summary=validate_submission(out/'submission.jsonl',chosen)
     terminal={'finished','asked_missing_info'}
     report={'mode':'finish_only_plumbing_smoke' if args.smoke_finish_only else 'local_llm_gold_transcript_'+args.partition,
-            'protocol':args.protocol,'partition':args.partition,
+            'protocol':args.protocol,'policy':args.policy,'partition':args.partition,
             'python':platform.python_version(),'command':sys.argv,'samples':len(rows),
             'provenance':provenance,'trace_audit':trace_audit,'submission_publish_seconds':publish_seconds,
             'model_path':str(args.model_path) if args.model_path else None,

@@ -38,7 +38,7 @@ def select_diagnostic_ids(examples, train_ids, dev_ids, *, samples=16, seed=42):
     return sorted(selected), dict(distribution)
 
 
-def compare_reports(custom, native, custom_scores, native_scores):
+def compare_reports(custom, native, custom_scores, native_scores, *, comparison='protocol'):
     """Compare only aligned IDs/configs. Scores remain local and uncertified."""
     def indexed(rows):
         values={r['id']:r for r in rows}
@@ -60,8 +60,18 @@ def compare_reports(custom, native, custom_scores, native_scores):
     keys=('seed','seconds','max_decisions','max_calls','max_repairs','context_tokens','new_tokens',
           'decoding','dtype','attention','chosen_ids_sha256','partition')
     if any(a['config'][k]!=b['config'][k] for k in keys): raise ValueError('paired generation budgets/IDs differ')
-    if a['config']['protocol']!='custom_json' or b['config']['protocol']!='qwen_native':
-        raise ValueError('wrong comparison protocols')
+    if comparison=='protocol':
+        if a['config']['protocol']!='custom_json' or b['config']['protocol']!='qwen_native':
+            raise ValueError('wrong comparison protocols')
+        if a['config'].get('policy','off')!='off' or b['config'].get('policy','off')!='off':
+            raise ValueError('protocol comparison requires policy off')
+        labels=('custom_json','qwen_native')
+    elif comparison=='policy':
+        if a['config']['protocol']!='custom_json' or b['config']['protocol']!='custom_json' or (
+            a['config'].get('policy')!='off' or b['config'].get('policy')!='grounded_v1'):
+            raise ValueError('policy comparison requires off vs grounded_v1 on custom_json')
+        labels=('off','grounded_v1')
+    else:raise ValueError('unknown comparison type')
     rows=[]
     for sid in sorted(cm):
         rows.append({'id':sid,'custom_local_score':cs[sid]['local_score'],'native_local_score':ns[sid]['local_score'],
@@ -72,22 +82,25 @@ def compare_reports(custom, native, custom_scores, native_scores):
         return {'mean_local_score':scores['mean_local_score'],'hash_matches':scores['hash_matches'],
                 'predicted_calls':scores['predicted_calls'],'matched_calls':scores['matched_calls'],
                 'stop_reasons':report['stop_reasons'],
-                'parse_validation_errors':sum(r['errors'] for r in report['rows']),
+                'controller_errors_total':sum(r['errors'] for r in report['rows']),
                 'latency_seconds':{'mean':sum(lat)/len(lat),'p50':lat[len(lat)//2],
                                    'p95':lat[int((len(lat)-1)*.95)],'max':max(lat)}}
-    return {'samples':len(rows),'partition':a['config']['partition'],'official_score':False,
-            'custom_json':summary(custom,custom_scores),'qwen_native':summary(native,native_scores),
+    if comparison=='policy':
+        rows=[{'id':r['id'],'baseline_local_score':r['custom_local_score'],'candidate_local_score':r['native_local_score'],
+               'delta':r['delta'],'baseline_stop':r['custom_stop'],'candidate_stop':r['native_stop']} for r in rows]
+    return {'comparison':comparison,'samples':len(rows),'partition':a['config']['partition'],'official_score':False,
+            labels[0]:summary(custom,custom_scores),labels[1]:summary(native,native_scores),
             'improved_samples':sum(r['delta']>0 for r in rows),'regressed_samples':sum(r['delta']<0 for r in rows),
             'unchanged_samples':sum(r['delta']==0 for r in rows),
             'limitations':['Training diagnostic, not held-out dev or full-dev quality estimate.',
-                           'Protocol-specific formatting instructions and message layout change together.',
+                           'Protocol formatting changes together.' if comparison=='protocol' else 'Policy prompt, evidence guards and progress feedback change together.',
                            'Same model path/metadata, not a fresh checksum of all weight shards.',
                            'Custom runs first; timing is diagnostic, not a controlled speed benchmark.'],
             'rows':rows}
 
 
-def main(argv=None):
-    p=argparse.ArgumentParser(description=__doc__)
+def main(argv=None,*,comparison='protocol'):
+    p=argparse.ArgumentParser(description=__doc__ if comparison=='protocol' else 'Paired off/grounded policy diagnostic, train partition only')
     p.add_argument('--data-root',type=Path,required=True)
     p.add_argument('--manifest',type=Path,required=True)
     p.add_argument('--model-path',type=Path,required=True)
@@ -107,22 +120,25 @@ def main(argv=None):
     (out/'selection.json').write_text(json.dumps(selection,indent=2),encoding='utf-8')
     ids_path=out/'ids.json';ids_path.write_text(json.dumps(ids,indent=2),encoding='utf-8')
     reports,scores={},{}
-    for protocol in ('custom_json','qwen_native'):
-        print(f'Running {protocol}: {len(ids)} training diagnostic samples',flush=True)
-        with (out/f'{protocol}.log').open('x',encoding='utf-8') as log:
+    variants=('custom_json','qwen_native') if comparison=='protocol' else ('off','grounded_v1')
+    for variant in variants:
+        protocol=variant if comparison=='protocol' else 'custom_json'
+        policy='off' if comparison=='protocol' else variant
+        print(f'Running {variant}: {len(ids)} training diagnostic samples',flush=True)
+        with (out/f'{variant}.log').open('x',encoding='utf-8') as log:
             subprocess.run([sys.executable,'-u','-m','lifemate.cli','text-baseline',
                 '--data-root',str(root),'--manifest',str(a.manifest.resolve()),'--model-path',str(a.model_path.resolve()),
-                '--protocol',protocol,'--partition','train','--ids-file',str(ids_path),
-                '--output-dir',str(out/protocol)],stdout=log,stderr=subprocess.STDOUT,check=True)
-        with (out/f'{protocol}-evaluation.log').open('x',encoding='utf-8') as log:
+                '--protocol',protocol,'--policy',policy,'--partition','train','--ids-file',str(ids_path),
+                '--output-dir',str(out/variant)],stdout=log,stderr=subprocess.STDOUT,check=True)
+        with (out/f'{variant}-evaluation.log').open('x',encoding='utf-8') as log:
             subprocess.run([sys.executable,'-m','lifemate.cli','evaluate-run','--data-root',str(root),
-                '--submission',str(out/protocol/'submission.jsonl'),'--manifest',str(a.manifest.resolve()),
-                '--partition','train','--allow-subset','--output-dir',str(out/(protocol+'-scores'))],
+                '--submission',str(out/variant/'submission.jsonl'),'--manifest',str(a.manifest.resolve()),
+                '--partition','train','--allow-subset','--output-dir',str(out/(variant+'-scores'))],
                 stdout=log,stderr=subprocess.STDOUT,check=True)
-        reports[protocol]=json.loads((out/protocol/'report.json').read_text(encoding='utf-8'))
-        scores[protocol]=json.loads((out/(protocol+'-scores')/'scores.json').read_text(encoding='utf-8'))
-        if {r['id'] for r in reports[protocol]['rows']}!=set(ids): raise ValueError('comparison selection differs')
-    result=compare_reports(reports['custom_json'],reports['qwen_native'],scores['custom_json'],scores['qwen_native'])
+        reports[variant]=json.loads((out/variant/'report.json').read_text(encoding='utf-8'))
+        scores[variant]=json.loads((out/(variant+'-scores')/'scores.json').read_text(encoding='utf-8'))
+        if {r['id'] for r in reports[variant]['rows']}!=set(ids): raise ValueError('comparison selection differs')
+    result=compare_reports(reports[variants[0]],reports[variants[1]],scores[variants[0]],scores[variants[1]],comparison=comparison)
     result['selection']=selection
     with (out/'comparison.json').open('x',encoding='utf-8') as stream: json.dump(result,stream,ensure_ascii=False,indent=2)
     print(json.dumps({k:v for k,v in result.items() if k!='rows'},indent=2))

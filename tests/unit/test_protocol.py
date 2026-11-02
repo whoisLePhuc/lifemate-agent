@@ -138,7 +138,14 @@ class DiagnosticSelectionTests(unittest.TestCase):
             if change=='budget':modified['provenance']['config']['seconds']=2
             if change=='model':modified['provenance']['model']={'revision':'different'}
             with self.subTest(change=change),self.assertRaises(ValueError):compare_reports(custom,modified,scores,scores)
-
+        baseline=deepcopy(custom);candidate=deepcopy(custom)
+        baseline['provenance']['config']['policy']='off'
+        candidate['provenance']['config']['policy']='grounded_v1'
+        policy_result=compare_reports(baseline,candidate,scores,scores,comparison='policy')
+        self.assertIn('grounded_v1',policy_result)
+        self.assertIn('off',policy_result)
+        candidate['provenance']['config']['policy']='off'
+        with self.assertRaises(ValueError):compare_reports(baseline,candidate,scores,scores,comparison='policy')
 
 
 if __name__=='__main__':unittest.main()
