@@ -3,11 +3,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lifemate-data"
+name = "lifemate-agent"
 version = "0.1.0"
-description = "Read-only LifeMate metadata loader with separate train references"
+description = "LifeMate agent, data preparation and evaluation tools"
 requires-python = ">=3.10"
 dependencies = []
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
+include = ["lifemate", "lifemate.*", "lifemate_data", "lifemate_tools", "lifemate_output", "lifemate_agent", "lifemate_evaluation", "training", "evaluation"]
+
+[project.scripts]
+lifemate = "lifemate.cli:main"

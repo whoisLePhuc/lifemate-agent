@@ -1,3 +1,7 @@
+from pathlib import Path as _RepoPath
+import sys as _repo_sys
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 """Validate metadata contracts; aggregate-only output, no labels or state dumps."""
 import argparse
 from datetime import datetime, timezone
@@ -6,7 +10,7 @@ from pathlib import Path
 import platform
 import time
 
-from lifemate_data import DatasetLoader
+from lifemate.input.adapter import DatasetLoader
 
 
 def main():

@@ -1,10 +1,12 @@
 # Trạng thái chuẩn bị commit
 
+> Đây là bản ghi chuẩn bị commit baseline trước refactor. Cấu trúc và bằng chứng hiện tại xem [refactor kiến trúc](REFACTOR_ARCHITECTURE.md); suite hiện có 49 tests. Các số 47 bên dưới là bằng chứng của giai đoạn chuẩn bị baseline, không phải số test hiện tại.
+
 Ngày kiểm tra: 02/11/2026. Chưa stage, commit hoặc push thay đổi trong bước chuẩn bị này.
 
 ## Các mục đã hoàn thiện
 
-- Công cụ phân tích nằm trong `src/lifemate_evaluation/analysis.py`, entry point `scripts/analyze_run.py`; repo agent không cần import mã từ Experiments. Wrapper cũ chỉ giữ cho tương thích workspace.
+- Công cụ phân tích nằm trong `evaluation/analysis.py`, entry point `scripts/analyze_run.py`; repo agent không cần import mã từ Experiments. Wrapper cũ chỉ giữ cho tương thích workspace.
 - Thêm 6 tests về matching one-to-one, phân biệt tool/arguments, ID thiếu/trùng, output không ghi đè/thoát thư mục và gold-hash replay đúng một session mỗi mẫu.
 - [Hướng dẫn baseline](TEXT_BASELINE.md), [phân tích](BASELINE_ANALYSIS.md), README và kế hoạch workspace phản ánh run 04 đã hoàn tất. Lịch sử tải lỗi/run dừng nằm trong phần lịch sử thử nghiệm, không còn được mô tả là tiến trình đang chạy.
 - [Tóm tắt aggregate](Results/text-baseline-v0.1.json) lưu model revision, fingerprints, phiên bản môi trường, cấu hình, lệnh chạy và số liệu 309 dev; không chứa sample IDs, transcript, arguments, app state hoặc đường dẫn cá nhân.

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from lifemate_data import DataError, DatasetLoader
+from lifemate.input.adapter import DataError, DatasetLoader
 
 
 class LoaderTests(unittest.TestCase):

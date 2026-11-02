@@ -2,8 +2,8 @@
 import os
 import unittest
 
-from lifemate_data import DatasetLoader
-from lifemate_tools import LifecycleError, ToolEnvAdapter
+from lifemate.input.adapter import DatasetLoader
+from lifemate.tools.env_adapter import LifecycleError, ToolEnvAdapter
 
 
 @unittest.skipUnless(os.environ.get("LIFEMATE_DATA_ROOT"), "set LIFEMATE_DATA_ROOT to opt in")

@@ -1,3 +1,7 @@
+from pathlib import Path as _RepoPath
+import sys as _repo_sys
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 """Development-time download only; inference is strictly local_files_only."""
 import argparse
 from huggingface_hub import snapshot_download

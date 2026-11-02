@@ -61,3 +61,18 @@ ASR, the competition scorer and a complete competition deployment are not yet im
 - Data access, model usage, and submission packaging must follow the competition rules and applicable licenses.
 
 This is a participant team's repository, not an official repository of the competition organizers.
+
+## Source layout
+
+Runtime code is organised under `src/lifemate/` (contracts, input, context, agent, tools, output). Offline data preparation is in `training/`; dev/replay diagnostics are in `evaluation/`. See [architecture and migration](Docs/REFACTOR_ARCHITECTURE.md).
+
+From this repository in PowerShell:
+
+```powershell
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
+.venv/Scripts/python.exe -m lifemate.cli --help
+.venv/Scripts/python.exe -m lifemate.cli text-baseline --help
+.venv/Scripts/python.exe -m unittest discover -s tests -v
+```
+
+The old `scripts/*.py` commands and legacy import aliases remain available for archived experiments. No baseline prompt, inference parameters or model weights were changed in the structural refactor.

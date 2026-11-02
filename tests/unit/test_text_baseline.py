@@ -3,7 +3,10 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
 
-from lifemate_agent.text import parse_action,run_controller,text_input,messages
+from lifemate.agent.planner import parse_action
+from lifemate.agent.controller import run_controller
+from lifemate.context.manager import text_input
+from lifemate.agent.prompt import messages
 
 
 class Planner:
@@ -56,7 +59,7 @@ class TextTests(unittest.TestCase):
         class Late:
             def generate(self,*args):return '{"type":"call","name":"demo.write","arguments":{"value":1}}'
         env=Env()
-        with patch('lifemate_agent.text.time.monotonic',side_effect=[0,0,31,31]):
+        with patch('lifemate.agent.controller.time.monotonic',side_effect=[0,0,31,31]):
             r=run_controller(self.payload(),env,Late())
         self.assertEqual(r.stop,'deadline');self.assertEqual(env.calls,[])
 

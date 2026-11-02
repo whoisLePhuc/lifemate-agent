@@ -7,7 +7,7 @@ Read-only loader for the organisers' JSONL and catalogs. No external runtime dep
 ## Run from this repository (PowerShell)
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 python -m unittest discover -s tests -v
 python scripts/check_data.py --data-root 'D:\Projects\lifemate-workspace\Data' --output 'D:\Projects\lifemate-workspace\Outputs\001-data-loader\run-new\report.json'
 ```
@@ -17,7 +17,7 @@ Choose a fresh output directory per run. `check_data.py` refuses to overwrite a 
 ## Use
 
 ```python
-from lifemate_data import DatasetLoader
+from lifemate.input.adapter import DatasetLoader
 
 loader = DatasetLoader(data_root, "train")
 for item in loader.iter_inputs():

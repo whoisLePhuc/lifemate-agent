@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from lifemate_evaluation.analysis import main
+from evaluation.analysis import main
 
 
 class AnalysisTests(unittest.TestCase):
@@ -85,7 +85,7 @@ class AnalysisTests(unittest.TestCase):
             def call(self, name, arguments): pass
             def finalize(self): return {'state_hash': self.id*64}
         before = (self.run/'submission.jsonl').read_bytes()
-        with patch('lifemate_tools.ToolEnvAdapter', Fake):
+        with patch('lifemate.tools.env_adapter.ToolEnvAdapter', Fake):
             result = self.execute('--verify-gold-hashes')
         self.assertEqual(opened, [('train','a'), ('train','b')])
         self.assertEqual(result['totals']['gold_hash_matches'], 2)

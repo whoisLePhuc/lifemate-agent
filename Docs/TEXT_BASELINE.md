@@ -1,5 +1,7 @@
 # Baseline LLM dùng transcript chuẩn
 
+> Mã đã được tổ chức theo [kiến trúc mới](REFACTOR_ARCHITECTURE.md). Các lệnh script dưới đây vẫn tương thích; CLI thống nhất là `python -m lifemate.cli text-baseline ...`. Kết quả run 04 là baseline lịch sử, không được đo lại trong lần refactor.
+
 > Các đường dẫn `../Outputs/` và `../Experiments/` ghi trong nội dung dưới đây được tính từ repo `lifemate-agent`, không từ thư mục Docs. Chúng là bằng chứng workspace ngoài Git; lệnh triển khai nằm trong repo này.
 
 ## Trạng thái hiện tại
@@ -62,7 +64,7 @@ Backend greedy forward giữ KV cache trong một quyết định, tạo cache m
 Từ repo chính, output mới cho mỗi run:
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 $env:HF_HUB_OFFLINE = '1'
 .venv/Scripts/python.exe scripts/run_text_baseline.py --data-root ../Data --manifest ../Outputs/004-train-dev-split/run-20261102-01/split_manifest.json --model-path ../Models/Qwen3-4B-Instruct-2507 --output-dir ../Outputs/005-text-baseline/run-new --limit 3
 ```

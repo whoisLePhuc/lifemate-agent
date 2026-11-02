@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from lifemate_output import SubmissionError, SubmissionWriter, validate_submission
-from lifemate_evaluation.replay import TrainReplaySession
+from lifemate.output.writer import SubmissionError, SubmissionWriter, validate_submission
+from evaluation.replay import TrainReplaySession
 
 
 class WriterTests(unittest.TestCase):
@@ -56,7 +56,7 @@ class WriterTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             with SubmissionWriter(self.path, ["a"]) as writer: raise RuntimeError("stopped")
         self.assertFalse(self.path.exists())
-        with patch("lifemate_output.writer.os.fsync", side_effect=OSError("disk error")):
+        with patch("lifemate.output.writer.os.fsync", side_effect=OSError("disk error")):
             with self.assertRaises(OSError):
                 with SubmissionWriter(self.path, ["a"]) as writer: writer.write(self.record)
         self.assertFalse(self.path.exists())

@@ -11,7 +11,7 @@ Run: `Outputs/005-text-baseline/run-20261102-04-full-dev/`, tính từ workspace
 Lệnh tái tạo từ repo `lifemate-agent`, dùng tên output mới. Công cụ nằm trong chính repo này; không cần mã của workspace Experiments:
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe scripts/analyze_run.py --data-root ../Data --run-dir ../Outputs/005-text-baseline/run-20261102-04-full-dev --smoke-report ../Outputs/005-text-baseline/run-20261102-01-smoke/report.json --verify-gold-hashes --output-name analysis-rerun.json
 ```
 

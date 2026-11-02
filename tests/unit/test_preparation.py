@@ -4,7 +4,7 @@ import tempfile
 import unittest
 import wave
 
-from lifemate_data.preparation import audit_audio, group_train, normalize, split_groups
+from training.preparation import audit_audio, group_train, normalize, split_groups
 
 
 def example(id, text, history=()):

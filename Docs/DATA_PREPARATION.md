@@ -5,7 +5,7 @@
 Từ repo chính, Python 3.10+ (đã kiểm tra bằng 3.13.12), không dependency ngoài:
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 python -m unittest discover -s tests -v
 python scripts/prepare_data.py --data-root 'D:\Projects\lifemate-workspace\Data' --output-dir 'D:\Projects\lifemate-workspace\Outputs\004-train-dev-split\run-new' --seed 42 --dev-fraction 0.2
 ```
@@ -39,7 +39,7 @@ Sắp xếp nhóm theo ID rồi shuffle bằng `random.Random(seed)`, chọn ngu
 
 ```python
 import json
-from lifemate_data import DatasetLoader
+from lifemate.input.adapter import DatasetLoader
 
 with open(manifest_path, encoding='utf-8') as stream:
     manifest = json.load(stream)

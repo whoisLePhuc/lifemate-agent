@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from lifemate_tools import AdapterError, LifecycleError, RuntimeFailure, ToolEnvAdapter
+from lifemate.tools.env_adapter import AdapterError, LifecycleError, RuntimeFailure, ToolEnvAdapter
 
 
 class FakeEnv:

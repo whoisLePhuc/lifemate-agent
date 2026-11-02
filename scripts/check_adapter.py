@@ -1,3 +1,7 @@
+from pathlib import Path as _RepoPath
+import sys as _repo_sys
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 """Train replay / test empty-session contract smoke, not an agent or scorer."""
 import argparse
 from datetime import datetime, timezone
@@ -8,8 +12,8 @@ import re
 import sys
 import time
 
-from lifemate_data import DatasetLoader
-from lifemate_tools import LifecycleError, ToolEnvAdapter
+from lifemate.input.adapter import DatasetLoader
+from lifemate.tools.env_adapter import LifecycleError, ToolEnvAdapter
 
 
 def main():

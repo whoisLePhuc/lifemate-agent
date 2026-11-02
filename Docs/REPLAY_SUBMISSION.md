@@ -4,14 +4,14 @@
 
 ## Hai chức năng riêng
 
-`lifemate_output.SubmissionWriter` dùng cho cả pipeline inference sau này: nhận record `{id, tool_calls, state_hash}` từ Adapter và ghi JSONL, không chọn tool, sửa arguments hoặc tính hash.
+`lifemate.output.writer.SubmissionWriter` dùng cho cả pipeline inference sau này: nhận record `{id, tool_calls, state_hash}` từ Adapter và ghi JSONL, không chọn tool, sửa arguments hoặc tính hash.
 
-`lifemate_evaluation.replay.TrainReplaySession` và `scripts/replay_train.py` chỉ dành cho kiểm tra nhãn train. Chúng chạy gold calls, đối chiếu kết quả và trạng thái cuối, rồi tạo file **`gold_replay_submission.jsonl`**. Đây là đáp án train được replay, không phải dự đoán của agent và không dùng để nộp public/private test.
+`evaluation.replay.TrainReplaySession` và `scripts/replay_train.py` chỉ dành cho kiểm tra nhãn train. Chúng chạy gold calls, đối chiếu kết quả và trạng thái cuối, rồi tạo file **`gold_replay_submission.jsonl`**. Đây là đáp án train được replay, không phải dự đoán của agent và không dùng để nộp public/private test.
 
 ## Submission Writer
 
 ```python
-from lifemate_output import SubmissionWriter, validate_submission
+from lifemate.output.writer import SubmissionWriter, validate_submission
 
 # expected_ids lấy từ đúng split bằng Data Loader, không lấy từ nhãn.
 with SubmissionWriter(output_path, expected_ids) as writer:
@@ -56,7 +56,7 @@ Hash ghi trong file vẫn lấy từ `env.finalize()`. Không tự hash partial 
 ## Chạy lại (PowerShell, từ repo chính)
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 python -m unittest discover -s tests -v
 python scripts/replay_train.py --data-root 'D:\Projects\lifemate-workspace\Data' --output-dir 'D:\Projects\lifemate-workspace\Outputs\003-replay-submission\run-new'
 ```

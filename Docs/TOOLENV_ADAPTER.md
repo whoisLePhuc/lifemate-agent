@@ -21,12 +21,12 @@ Không truy cập trực tiếp file trạng thái, không expose `get_state()`,
 Từ repository này, PowerShell:
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 ```
 
 ```python
-from lifemate_data import DatasetLoader
-from lifemate_tools import ToolEnvAdapter
+from lifemate.input.adapter import DatasetLoader
+from lifemate.tools.env_adapter import ToolEnvAdapter
 
 data_root = r"D:\Projects\lifemate-workspace\Data"
 split = "train"
@@ -79,7 +79,7 @@ for item in loader.iter_inputs():
 Chọn output mới ở mỗi lần chạy:
 
 ```powershell
-$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 python -m unittest discover -s tests -v
 
 # Opt-in kiểm tra runtime thật trên một mẫu train, trong tiến trình mới.
