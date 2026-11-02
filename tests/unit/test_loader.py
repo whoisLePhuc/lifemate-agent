@@ -63,6 +63,14 @@ class LoaderTests(unittest.TestCase):
             with self.assertRaisesRegex(DataError, "only for train"):
                 next(DatasetLoader(self.root, split).iter_training())
 
+    def test_selected_ids_exclude_heldout_reference_before_validation(self):
+        heldout=deepcopy(self.row);heldout['id']='heldout';heldout['label']=None
+        self.write([self.row,heldout])
+        rows=list(DatasetLoader(self.root,'train').iter_training(sample_ids=['synthetic']))
+        self.assertEqual([r.agent_input.id for r in rows],['synthetic'])
+        with self.assertRaises(DataError):list(DatasetLoader(self.root,'train').iter_training(sample_ids=['missing']))
+        with self.assertRaises(DataError):list(DatasetLoader(self.root,'train').iter_training(sample_ids=['synthetic']*2))
+
     def test_schema_copies_are_isolated(self):
         self.write()
         loader = DatasetLoader(self.root, "train")

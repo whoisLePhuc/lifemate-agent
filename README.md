@@ -55,6 +55,8 @@ Independent prediction replay, a schema-aware **local fuzzy scorer** and per-dec
 
 ASR, organiser-scorer conformance and a complete competition deployment are not yet implemented.
 
+Custom-JSON SFT trajectory preparation and completion-only label audits are available: [trajectory dataset](Docs/TRAJECTORY_DATASET.md). The frozen outer train is split into 1,112 fit / 124 inner-validation samples, producing 3,517 / 392 next-action examples. All 3,909 rows pass tokenizer/mask audit; the 309 outer-dev IDs remain excluded. No model training has been performed.
+
 An optional Qwen native tool-calling mode and a paired training diagnostic runner are implemented: [native tool-calling](Docs/NATIVE_TOOL_CALLING.md). The default remains `custom_json`; use `--protocol qwen_native` to opt in. History is represented as messages, never re-executed.
 
 On a paired 16-sample training diagnostic, native reduced format/validation errors (7 to 1) but lowered the mean local score (0.31875 to 0.21875). Both modes passed trace and independent replay checks. Native has not been promoted or evaluated on the full dev set.
@@ -86,6 +88,8 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m lifemate.cli replay-predictions --help
 .venv/Scripts/python.exe -m lifemate.cli compare-protocols --help
 .venv/Scripts/python.exe -m lifemate.cli compare-policies --help
+.venv/Scripts/python.exe -m lifemate.cli prepare-trajectories --help
+.venv/Scripts/python.exe -m lifemate.cli audit-trajectories --help
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 

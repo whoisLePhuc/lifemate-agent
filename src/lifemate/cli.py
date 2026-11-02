@@ -11,6 +11,8 @@ COMMANDS = {
     'evaluate-run': 'evaluation.evaluate_run',
     'compare-protocols': 'evaluation.compare_protocols',
     'compare-policies': 'evaluation.compare_policies',
+    'prepare-trajectories': 'training.prepare_trajectories',
+    'audit-trajectories': 'training.audit_trajectories',
 }
 
 def main():

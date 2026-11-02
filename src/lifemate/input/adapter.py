@@ -222,10 +222,21 @@ class DatasetLoader:
             except DataError as exc:
                 raise DataError(f"{self.split} line {number}: {exc}") from exc
 
-    def iter_training(self) -> Iterator[TrainingExample]:
+    def iter_training(self, *, sample_ids=None) -> Iterator[TrainingExample]:
         """Explicit train/evaluation path; unavailable for either test split."""
         _require(self.split == "train", "references are available only for train")
+        wanted=None
+        if sample_ids is not None:
+            _require(not isinstance(sample_ids,str),'sample_ids must be an iterable of IDs, not one string')
+            values=list(sample_ids)
+            _require(bool(values) and all(isinstance(x,str) and bool(x) for x in values),
+                     'selected training IDs must be nonempty strings')
+            _require(len(values)==len(set(values)), 'duplicate selected training ID')
+            wanted=set(values)
+        found=set()
         for number, row in self._rows():
+            if wanted is not None and row['id'] not in wanted:
+                continue  # Do not construct or validate a held-out Reference.
             try:
                 agent_input = self._input(row)
                 _require(isinstance(row.get("audio_text"), str), "train needs audio_text")
@@ -245,6 +256,9 @@ class DatasetLoader:
                          "label.final_state must be an object")
                 reference = Reference(row["audio_text"], tuple(history_text), calls,
                                       deepcopy(results), deepcopy(label["final_state"]))
+                found.add(agent_input.id)
                 yield TrainingExample(agent_input, reference)
             except DataError as exc:
                 raise DataError(f"{self.split} line {number}: {exc}") from exc
+        if wanted is not None:
+            _require(found==wanted, 'selected training IDs missing from metadata')

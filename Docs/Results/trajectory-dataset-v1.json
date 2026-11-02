@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "protocol": "custom_json",
+  "policy": "off",
+  "training_performed": false,
+  "toolenv_used": false,
+  "outer_train_samples": 1236,
+  "outer_dev_samples_excluded": 309,
+  "inner_reserved": {
+    "train": 1112,
+    "validation": 124,
+    "seen_ids": 16,
+    "forced_train_ids": 17
+  },
+  "partitions": {
+    "train": {
+      "retained_samples": 1112,
+      "samples_with_history": 740,
+      "out_of_scope_samples": 82,
+      "ask_samples": 146,
+      "rows": 3517,
+      "call_targets": 2551,
+      "finish_targets": 966
+    },
+    "validation": {
+      "retained_samples": 124,
+      "samples_with_history": 77,
+      "out_of_scope_samples": 7,
+      "ask_samples": 17,
+      "rows": 392,
+      "call_targets": 285,
+      "finish_targets": 107
+    }
+  },
+  "token_lengths": {
+    "train": {
+      "max_prompt": 10092,
+      "max_target": 105,
+      "max_sequence": 10099,
+      "sum_prompt": 20016657,
+      "sum_target": 97300
+    },
+    "validation": {
+      "max_prompt": 9297,
+      "max_target": 105,
+      "max_sequence": 9304,
+      "sum_prompt": 2261783,
+      "sum_target": 10817
+    }
+  },
+  "mask_checks_passed": 3909,
+  "quarantine_reasons": {},
+  "budgets": {
+    "context_tokens": 16384,
+    "generation_new_tokens": 384,
+    "training_max_length": 16384,
+    "max_calls": 8,
+    "max_decisions": 12
+  },
+  "limitations": [
+    "Retrospective inner validation; train was previously inspected.",
+    "Grouping inherits existing heuristics; no guarantee of semantic deduplication.",
+    "Independent decision examples are unweighted; long trajectories contribute more rows.",
+    "Teacher-forced prefixes, not closed-loop model quality or ASR input."
+  ],
+  "date": "2026-11-02",
+  "model": {
+    "id": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+  },
+  "audit": {
+    "schema_version": 1,
+    "valid": true,
+    "rows": 3909,
+    "counts": {
+      "train": 3517,
+      "validation": 392
+    },
+    "supervised_tokens": 108117,
+    "ignored_prompt_tokens": 22278440,
+    "mask_semantics": "Target JSON and EOS only; assistant header and padding excluded. Standard causal shift.",
+    "gold_prefix_authenticity": "Structural prefix/fingerprints checked; observations are not independently replayed here.",
+    "torch_probe": {
+      "passed": true,
+      "device": "cpu",
+      "toy_vocabulary": 7,
+      "supervised_shifted_tokens": 167,
+      "ignored_shifted_tokens": 29461,
+      "loss": 1.945910096168518,
+      "model_loaded": false,
+      "weights_updated": false
+    },
+    "training_performed": false,
+    "dataset_manifest_sha256": "db1f9e9f28ef39022d7f058dfd73c265cc8d7b619fadb388395e72b4a58a94c9"
+  },
+  "dataset_files_sha256": {
+    "inner_split.json": "21780fc77955142ec4f4d23494ca6977c2660ca30dff4a2a93b4aa8a9fcfe139",
+    "quarantine.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "report.json": "6d491ee674967f373f8a659a439ad9f3b34c57939275a99bec5fc8862d6d0506",
+    "train.jsonl": "1ebccb758243ee4017261c805567b2f48442d5a6ef9606871404f404958a5e80",
+    "train.tokens.jsonl": "909343285725845f3f53e7949ed7c3ba3826765c267a167172867752cbf6f4fe",
+    "validation.jsonl": "38645c8f1dfd0a7b2defb49fbfce46eca6658602310ec08888bf28708dff7007",
+    "validation.tokens.jsonl": "f9abc6de903307fa0d21b847e60f11b981e1045aaf8222a8d8ff757672c53d86"
+  },
+  "verification": {
+    "tests": 102,
+    "failed": 0,
+    "skipped": 0,
+    "wheel_modules_match_source": true,
+    "wheel_cli_help": [
+      "prepare-trajectories",
+      "audit-trajectories"
+    ]
+  },
+  "inner_group_counts": {
+    "train": 1073,
+    "validation": 124,
+    "crossed": 0
+  }
+}
