@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "baseline_id": "text-dev-v0.1",
+  "run_id": "run-20261102-04-full-dev",
+  "date": "2026-11-02",
+  "mode": "local_llm_gold_transcript_dev",
+  "source_commit": null,
+  "provenance_notes": [
+    "Run executed before source code was committed; no historical commit SHA is asserted.",
+    "Live per-sample journal was added after this run started; run 04 has no journal."
+  ],
+  "model": {
+    "id": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "revision_commit_date": "2025-09-17",
+    "parameters": 4022468096,
+    "dtype": "bfloat16"
+  },
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Windows",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER 16 GB",
+    "packages": {
+      "accelerate": "1.10.1",
+      "certifi": "2026.10.23",
+      "charset-normalizer": "3.5.2",
+      "colorama": "0.4.6",
+      "filelock": "4.2.4",
+      "fsspec": "2026.9.0",
+      "huggingface-hub": "0.34.4",
+      "idna": "3.20",
+      "jinja2": "3.1.6",
+      "markupsafe": "3.0.3",
+      "mpmath": "1.3.0",
+      "networkx": "3.7",
+      "numpy": "2.5.4",
+      "packaging": "26.3",
+      "psutil": "7.2.2",
+      "pyyaml": "6.0.3",
+      "regex": "2026.9.29",
+      "requests": "2.34.2",
+      "safetensors": "0.8.0",
+      "setuptools": "78.1.0",
+      "sympy": "1.14.0",
+      "tokenizers": "0.22.2",
+      "torch": "2.7.1+cu128",
+      "tqdm": "4.70.1",
+      "transformers": "4.56.2",
+      "typing-extensions": "4.16.0",
+      "urllib3": "2.8.0"
+    }
+  },
+  "data": {
+    "release": "v3.2.0",
+    "catalog_schema": "2.7.0",
+    "train_samples": 1236,
+    "dev_samples": 309,
+    "split_seed": 42,
+    "manifest_sha256": "44694abdcdd51ec64c62d61134f9325df863fb14d55172bd1c0c3bc3f762b594",
+    "source_sha256": {
+      "VERSION": "54e446f79425a6327446e1764fe2c4bb645e45ca08f0d4a7d4504a05ec23bbbd",
+      "train/train.jsonl": "24c42c79fbe8db932fe9817d041c0d0ca422ac8177b413cc1be0cda1fd8941a8",
+      "train/train_tools_catalog.json": "a994984bb580d7e0d60166641858901d428549682ba3614dbf9269037a33cce0"
+    }
+  },
+  "inference": {
+    "seed": 42,
+    "do_sample": false,
+    "context_tokens": 16384,
+    "max_new_tokens": 384,
+    "prefill_chunk_tokens": 256,
+    "max_decisions": 12,
+    "max_tool_calls": 8,
+    "max_repairs": 2,
+    "soft_deadline_seconds": 30,
+    "prompt_sha256": "7ade3655c07bd6e5e9c78063f73cc6f66bdb85b286f8fbdb9693844abb246d26"
+  },
+  "metrics": {
+    "samples": 309,
+    "raw_state_matches": 82,
+    "canonical_hash_matches": 109,
+    "exact_ordered_call_matches": 30,
+    "exact_unordered_call_matches": 30,
+    "completed_raw_state_matches": 56,
+    "stop_reasons": {
+      "asked_missing_info": 12,
+      "finished": 230,
+      "invalid_action": 30,
+      "deadline": 19,
+      "max_calls": 18
+    },
+    "controller_latency_seconds": {
+      "mean": 11.953611650485145,
+      "max": 29.78200000000652,
+      "p50": 9.46899999998277,
+      "p95": 29.70299999997951,
+      "sum": 3693.66599999991
+    }
+  },
+  "artifact_sha256": {
+    "report.json": "523d277c12c64b678c9096ef7e86fae23ae679c5f84d21e546ab65a034f7c3d0",
+    "submission.jsonl": "e6e48aa64bf694e61b2e6111f70bd3b93650c7d4fbdc4e3c38d75cac1d9c47b1",
+    "analysis-hash-verified.json": "3e036a9bc9757c0a01292acd4a121b6336a2153229b4f46c4090e6fe085dd645"
+  },
+  "commands_from_agent_repo": {
+    "inference": "python scripts/run_text_baseline.py --data-root ../Data --manifest ../Outputs/004-train-dev-split/run-20261102-01/split_manifest.json --model-path ../Models/Qwen3-4B-Instruct-2507 --output-dir ../Outputs/005-text-baseline/run-new",
+    "analysis": "python scripts/analyze_run.py --data-root ../Data --run-dir ../Outputs/005-text-baseline/run-20261102-04-full-dev --smoke-report ../Outputs/005-text-baseline/run-20261102-01-smoke/report.json --verify-gold-hashes --output-name analysis-rerun.json"
+  },
+  "limitations": [
+    "Not the official competition score; fuzzy token-F1 is not implemented.",
+    "Raw-state equality differs from canonical hash equality.",
+    "Controller timings exclude model loading and evaluation; timeout is soft.",
+    "Package pins describe the recorded Windows/Python 3.12 environment, not an A30 Docker lock."
+  ]
+}
