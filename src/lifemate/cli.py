@@ -9,6 +9,7 @@ COMMANDS = {
     'analyze-run': 'evaluation.analysis',
     'replay-predictions': 'evaluation.replay_predictions',
     'evaluate-run': 'evaluation.evaluate_run',
+    'compare-protocols': 'evaluation.compare_protocols',
 }
 
 def main():

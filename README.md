@@ -55,6 +55,10 @@ Independent prediction replay, a schema-aware **local fuzzy scorer** and per-dec
 
 ASR, organiser-scorer conformance and a complete competition deployment are not yet implemented.
 
+An optional Qwen native tool-calling mode and a paired training diagnostic runner are implemented: [native tool-calling](Docs/NATIVE_TOOL_CALLING.md). The default remains `custom_json`; use `--protocol qwen_native` to opt in. History is represented as messages, never re-executed.
+
+On a paired 16-sample training diagnostic, native reduced format/validation errors (7 to 1) but lowered the mean local score (0.31875 to 0.21875). Both modes passed trace and independent replay checks. Native has not been promoted or evaluated on the full dev set.
+
 ## Data and Submission
 
 - Competition datasets and model weights are not included in this repository.
@@ -76,6 +80,7 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m lifemate.cli text-baseline --help
 .venv/Scripts/python.exe -m lifemate.cli evaluate-run --help
 .venv/Scripts/python.exe -m lifemate.cli replay-predictions --help
+.venv/Scripts/python.exe -m lifemate.cli compare-protocols --help
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 

@@ -1,0 +1,181 @@
+{
+  "samples": 16,
+  "partition": "train",
+  "official_score": false,
+  "custom_json": {
+    "mean_local_score": 0.31875,
+    "hash_matches": 11,
+    "predicted_calls": 47,
+    "matched_calls": 11,
+    "stop_reasons": {
+      "finished": 12,
+      "invalid_action": 2,
+      "max_calls": 2
+    },
+    "parse_validation_errors": 7,
+    "latency_seconds": {
+      "mean": 15.049875000007887,
+      "p50": 17.23399999999674,
+      "p95": 26.48399999999674,
+      "max": 29.76600000000326
+    }
+  },
+  "qwen_native": {
+    "mean_local_score": 0.21875,
+    "hash_matches": 7,
+    "predicted_calls": 33,
+    "matched_calls": 9,
+    "stop_reasons": {
+      "finished": 15,
+      "deadline": 1
+    },
+    "parse_validation_errors": 1,
+    "latency_seconds": {
+      "mean": 11.498312500003522,
+      "p50": 9.922000000020489,
+      "p95": 25.125,
+      "max": 29.75
+    }
+  },
+  "improved_samples": 1,
+  "regressed_samples": 3,
+  "unchanged_samples": 12,
+  "limitations": [
+    "Training diagnostic, not held-out dev or full-dev quality estimate.",
+    "Protocol-specific formatting instructions and message layout change together.",
+    "Same model path/metadata, not a fresh checksum of all weight shards.",
+    "Custom runs first; timing is diagnostic, not a controlled speed benchmark."
+  ],
+  "selection": {
+    "seed": 42,
+    "samples": 16,
+    "partition": "train",
+    "distribution": {
+      "ask": 4,
+      "out_of_scope": 4,
+      "single": 4,
+      "multi": 4
+    },
+    "note": "Gold is used only to stratify diagnostic selection, never passed to the planner."
+  },
+  "schema_version": 1,
+  "date": "2026-11-02",
+  "diagnostics": {
+    "custom_json": {
+      "by_category": {
+        "ask": {
+          "samples": 4,
+          "hash_matches": 1,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.1
+        },
+        "multi": {
+          "samples": 4,
+          "hash_matches": 2,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.175
+        },
+        "out_of_scope": {
+          "samples": 4,
+          "hash_matches": 4,
+          "zero_predicted_calls": 2,
+          "mean_local_score": 0.5
+        },
+        "single": {
+          "samples": 4,
+          "hash_matches": 4,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.5
+        }
+      },
+      "ask_presence": {
+        "tp": 0,
+        "fn": 4,
+        "fp": 0
+      },
+      "nonempty_gold_without_any_predicted_call": 0,
+      "trace_audit": {
+        "valid": true,
+        "samples": 16,
+        "issues": []
+      },
+      "replay_hashes_reproduced": 16,
+      "replay_ledger_matches": 16,
+      "business_failure_calls": 12,
+      "generation_finish_reasons": {
+        "eos": 68
+      },
+      "parse_error_types": {
+        "ValueError": 7
+      }
+    },
+    "qwen_native": {
+      "by_category": {
+        "ask": {
+          "samples": 4,
+          "hash_matches": 0,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.0
+        },
+        "multi": {
+          "samples": 4,
+          "hash_matches": 1,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.125
+        },
+        "out_of_scope": {
+          "samples": 4,
+          "hash_matches": 3,
+          "zero_predicted_calls": 2,
+          "mean_local_score": 0.5
+        },
+        "single": {
+          "samples": 4,
+          "hash_matches": 3,
+          "zero_predicted_calls": 0,
+          "mean_local_score": 0.25
+        }
+      },
+      "ask_presence": {
+        "tp": 0,
+        "fn": 4,
+        "fp": 0
+      },
+      "nonempty_gold_without_any_predicted_call": 0,
+      "trace_audit": {
+        "valid": true,
+        "samples": 16,
+        "issues": []
+      },
+      "replay_hashes_reproduced": 16,
+      "replay_ledger_matches": 16,
+      "business_failure_calls": 3,
+      "generation_finish_reasons": {
+        "eos": 49,
+        "deadline": 1
+      },
+      "parse_error_types": {
+        "ValueError": 1
+      }
+    }
+  },
+  "model": {
+    "id": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+  },
+  "verification": {
+    "tests": 74,
+    "failed": 0,
+    "skipped": 0,
+    "wheel_source_matches": true,
+    "wheel_cli_help": true,
+    "wheel_finish_only_native_smoke_samples": 3,
+    "wheel_trace_audit": {
+      "valid": true,
+      "samples": 3,
+      "issues": []
+    },
+    "ancestor_git_not_claimed": true
+  },
+  "decision": "Keep custom_json as default. Native is available for experiments; training diagnostic quality regressed. No full-dev superiority claim."
+}

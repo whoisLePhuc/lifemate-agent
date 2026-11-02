@@ -48,6 +48,7 @@ def main(argv=None):
     p.add_argument('--submission', required=True, type=Path)
     p.add_argument('--output-dir', required=True, type=Path)
     p.add_argument('--manifest', type=Path)
+    p.add_argument('--partition',choices=['train','dev'],default='dev')
     p.add_argument('--allow-subset', action='store_true')
     a = p.parse_args(argv)
     root, out = a.data_root.resolve(), a.output_dir.resolve()
@@ -61,8 +62,10 @@ def main(argv=None):
         dev, train = manifest['dev_ids'], manifest['train_ids']
         ids = {r['id'] for r in predictions}
         if len(dev) != len(set(dev)) or set(dev) & set(train): raise ValueError('invalid manifest')
-        if not ids <= set(dev) or (not a.allow_subset and ids != set(dev)):
-            raise ValueError('prediction coverage differs from frozen dev (use --allow-subset explicitly)')
+        selected = train if a.partition=='train' else dev
+        if len(selected)!=len(set(selected)): raise ValueError('duplicate partition IDs')
+        if not ids <= set(selected) or (not a.allow_subset and ids != set(selected)):
+            raise ValueError('prediction coverage differs from frozen partition (use --allow-subset explicitly)')
         for name, digest in manifest['source_sha256'].items():
             source = (root/name).resolve()
             if not source.is_relative_to(root) or any(x.lower().endswith('_environment') for x in source.parts):
@@ -72,7 +75,7 @@ def main(argv=None):
     submission_hash = file_hash(a.submission)
     inputs = dataset_fingerprints(root)
     provenance = collect_provenance(Path(__file__).resolve().parents[1],
-                                    config={'workflow':'evaluate-run', 'scorer_version':SCORER_VERSION},
+                                    config={'workflow':'evaluate-run','partition':a.partition, 'scorer_version':SCORER_VERSION},
                                     manifest=a.manifest)
     reports = {}
     for mode in ('predictions', 'gold'):

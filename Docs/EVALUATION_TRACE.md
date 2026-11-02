@@ -56,6 +56,7 @@ Output directory phải mới và ngoài Data. Lệnh này chỉ đánh giá pre
 
 Nếu đánh giá một subset dev có chủ đích, thêm `--allow-subset`; mặc định có manifest sẽ yêu cầu đủ dev IDs. Không truyền manifest thì vẫn chỉ hỗ trợ các ID train có reference, không chấm nhãn public/private test.
 
+Từ bước native protocol, có thể thêm `--partition train` khi đánh giá một training diagnostic có manifest; mặc định vẫn là `--partition dev`. Cần `--allow-subset` nếu không chạy đủ partition đã chọn.
 
 Các file:
 

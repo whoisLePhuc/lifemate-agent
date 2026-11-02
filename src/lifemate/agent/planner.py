@@ -39,13 +39,14 @@ class LocalPlanner:
         self.parameters=sum(p.numel() for p in self.model.parameters())
         if self.parameters >= 5_000_000_000: raise ValueError('LLM exceeds competition parameter limit')
 
-    def generate(self, messages, seconds):
+    def generate(self, messages, seconds, *, tools=None):
         """Return the same text contract; expose diagnostics separately."""
         started=time.perf_counter()
         self.last_generation={'finish_reason':None,'prompt_tokens':None,'new_tokens':0,
                               'prefill_seconds':0.,'decode_seconds':0.,
                               'timing_method':'CPU wall time; no added CUDA synchronize'}
         self._generated=[]
+        self._active_tools=tools
         self._generation_stage=None
         self._stage_started=started
         try:
@@ -62,12 +63,17 @@ class LocalPlanner:
                 self.last_generation[self._generation_stage+'_seconds']=time.perf_counter()-self._stage_started
             self.last_generation['elapsed_seconds']=time.perf_counter()-started
             self.last_generation['new_tokens']=len(self._generated)
-            self.last_generation['partial_output']=self.tokenizer.decode(self._generated,skip_special_tokens=True).strip()
+            self.last_generation['partial_output']=self._decode_generated()
+
+    def _decode_generated(self):
+        return self.tokenizer.decode(self._generated,skip_special_tokens=self._active_tools is None).strip()
 
     def _generate(self, messages, seconds):
         import torch
         deadline=time.monotonic()+seconds
-        text=self.tokenizer.apply_chat_template(messages,tokenize=False,add_generation_prompt=True)
+        template_kwargs={'tokenize':False,'add_generation_prompt':True}
+        if self._active_tools is not None: template_kwargs['tools']=self._active_tools
+        text=self.tokenizer.apply_chat_template(messages,**template_kwargs)
         inputs=self.tokenizer(text,return_tensors='pt').to('cuda')
         count=inputs['input_ids'].shape[-1]
         self.last_generation['prompt_tokens']=count
@@ -105,4 +111,4 @@ class LocalPlanner:
                     past_key_values=cache,use_cache=True,logits_to_keep=1)
                 cache=output.past_key_values
         if time.monotonic() >= deadline: raise TimeoutError('generation deadline')
-        return self.tokenizer.decode(generated,skip_special_tokens=True).strip()
+        return self._decode_generated()

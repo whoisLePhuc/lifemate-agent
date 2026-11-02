@@ -1,12 +1,13 @@
 import time
 
 from lifemate.contracts import Outcome
-from .prompt import messages
-from .planner import parse_action
+from .protocol import build_messages, parse_output, system_prompt, tool_schemas
 
 
 def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_calls=8, max_repairs=2,
-                   trace=None):
+                   trace=None, protocol='custom_json'):
+    system_prompt(protocol)
+    planner_kwargs={'tools':tool_schemas(payload)} if protocol=='qwen_native' else {}
     start=time.monotonic(); deadline=start+seconds
     events=[]; errors=calls=decisions=0; stop='max_decisions'
     allowed={t['name'] for t in payload['tools']}
@@ -19,7 +20,7 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         emit('decision_start', remaining_seconds=remaining, calls=calls, errors=errors)
         generation_start=time.perf_counter()
         try:
-            raw=planner.generate(messages(payload,events), remaining-.3)
+            raw=planner.generate(build_messages(payload,events,protocol), remaining-.3, **planner_kwargs)
         except TimeoutError as error:
             emit('generation', raw_output=getattr(planner,'last_generation',{}).get('partial_output'),
                  error_type=type(error).__name__, error_category='deadline',
@@ -37,11 +38,18 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         # Do not dispatch a late-generated action.
         if time.monotonic() >= deadline-.2: stop='deadline'; break
         try:
-            action=parse_action(raw)
+            # A cut-off native text response is not evidence of a deliberate finish.
+            if protocol=='qwen_native' and getattr(planner,'last_generation',{}).get('finish_reason')=='token_limit':
+                raise ValueError('native response reached token limit; do not dispatch partial output')
+            action=parse_output(raw,protocol)
         except (ValueError,TypeError,RecursionError) as error:
             emit('parse_error', raw_output=raw, error_type=type(error).__name__,
                  error_message=str(error), error_category='parse_error')
-            errors+=1; events.append({'validation_error':'Output must be one valid action JSON object.'})
+            errors+=1
+            feedback={'validation_error':'Output must be one valid action JSON object.'}
+            if protocol=='qwen_native':
+                feedback={'validation_error':str(error),'raw_output':raw}
+            events.append(feedback)
             if errors>max_repairs: stop='invalid_action'; break
             continue
         emit('parsed_action', action=action)
@@ -54,7 +62,10 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         emit('validation', action=action, result=valid,
              elapsed_seconds=time.perf_counter()-validation_start)
         if not valid['ok']:
-            errors+=1; events.append({'action':action,'validation_error':valid.get('error')})
+            errors+=1
+            feedback={'action':action,'validation_error':valid.get('error')}
+            if protocol=='qwen_native': feedback['raw_output']=raw
+            events.append(feedback)
             if errors>max_repairs: stop='validation_limit'; break
             continue
         emit('call_start', action=action, call_index=calls)
