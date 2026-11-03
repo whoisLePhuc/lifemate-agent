@@ -23,9 +23,12 @@ def parse_action(text):
 
 
 class LocalPlanner:
-    def __init__(self, model_path, *, seed=42, context_tokens=16384, new_tokens=384):
+    def __init__(self, model_path, *, seed=42, context_tokens=16384, new_tokens=384, adapter_path=None):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
+        for path in (model_path,adapter_path):
+            if path is not None and any(p.lower().endswith('_environment') for p in Path(path).resolve().parts):
+                raise ValueError('environment paths are forbidden for model/adapter files')
         if not Path(model_path).is_dir(): raise ValueError('local model directory missing')
         if not torch.cuda.is_available(): raise RuntimeError('CUDA GPU required by this backend')
         if not 0 < new_tokens < context_tokens <= 16384: raise ValueError('invalid token budget')
@@ -34,6 +37,12 @@ class LocalPlanner:
         self.tokenizer=AutoTokenizer.from_pretrained(model_path,local_files_only=True,trust_remote_code=False)
         self.model=AutoModelForCausalLM.from_pretrained(model_path,local_files_only=True,
                      trust_remote_code=False,torch_dtype=torch.bfloat16,attn_implementation='sdpa').to('cuda').eval()
+        if adapter_path is not None:
+            adapter_path=Path(adapter_path).resolve()
+            if not all((adapter_path/name).is_file() for name in ('adapter_config.json','adapter_model.safetensors')):
+                raise ValueError('local safetensors adapter directory required')
+            from peft import PeftModel
+            self.model=PeftModel.from_pretrained(self.model,adapter_path,local_files_only=True,is_trainable=False).eval()
         self.context_tokens=context_tokens; self.new_tokens=new_tokens
         self.seed=seed
         self.parameters=sum(p.numel() for p in self.model.parameters())

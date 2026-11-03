@@ -1,0 +1,80 @@
+{
+  "status": "complete",
+  "training_performed": true,
+  "optimizer_steps": 4,
+  "train_rows_selected": 4,
+  "validation_rows_selected": 4,
+  "trainable_parameters": 33030144,
+  "total_parameters_including_adapter": 4055498240,
+  "initial_adapter_sha256": "fd9faac46a93d61d7e91001b8cc8dd02ce81c81d153dc6fb48d95135c4c5c981",
+  "final_adapter_sha256": "7311f346df45c904517b3ef40b6055f98490725d526ea46c53bafe013ee451f0",
+  "changed_adapter_tensors": 504,
+  "validation_before": {
+    "rows": 4,
+    "supervised_tokens": 96,
+    "token_mean_loss": 0.9649203599741062,
+    "row_mean_loss": 0.94411800801754,
+    "teacher_forced": true,
+    "closed_loop_score": false
+  },
+  "validation_after": {
+    "rows": 4,
+    "supervised_tokens": 96,
+    "token_mean_loss": 0.5371261358746912,
+    "row_mean_loss": 0.3346270626745991,
+    "teacher_forced": true,
+    "closed_loop_score": false
+  },
+  "reload": {
+    "state_tensors_exact": true,
+    "greedy_teacher_forced_ids_equal": true,
+    "loss_before_reload": 2.138282525265822e-06,
+    "loss_after_reload": 2.138282525265822e-06,
+    "backend": "same NF4 and kbit dtype preparation; BF16 inference parity not implied"
+  },
+  "dataset_manifest_sha256": "db1f9e9f28ef39022d7f058dfd73c265cc8d7b619fadb388395e72b4a58a94c9",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+  "elapsed_seconds": 69.8469030999695,
+  "limitations": [
+    "Short training smoke is not an agent-quality improvement claim.",
+    "Validation may be a selected row subset; no closed-loop score is computed here.",
+    "Micro-loss means are averaged across accumulation steps; rows are unweighted.",
+    "Seeds fixed; CUDA reductions need not be bit-identical across hosts.",
+    "Adapter checkpoints only; exact optimizer/RNG resume is not implemented."
+  ],
+  "schema_version": 1,
+  "full_training_performed": false,
+  "quality_improvement_demonstrated": false,
+  "training_packages": {
+    "peft": "0.17.1",
+    "bitsandbytes": "0.48.1",
+    "torch": "2.7.1+cu128",
+    "transformers": "4.56.2",
+    "accelerate": "1.10.1"
+  },
+  "peak_reserved_bytes": 12895387648,
+  "longest_selected_sequence_tokens": 10099,
+  "closed_loop_smoke": {
+    "samples": 3,
+    "mean_local_score": 0.0,
+    "official_score": false,
+    "hash_matches": 1,
+    "matched_calls": 0,
+    "gold_calls": 9,
+    "predicted_calls": 6
+  },
+  "verification": {
+    "tests_passed": 110,
+    "skipped": 0,
+    "prediction_replay_matches": 3,
+    "trace_audit_valid": true,
+    "wheel_module_bytes_match": true,
+    "isolated_wheel_cli_help_passed": true
+  },
+  "evidence": [
+    "Outputs/010-qlora-trainer/run-20261102-01-smoke/",
+    "Outputs/010-qlora-trainer/run-20261102-02-inner-smoke/",
+    "Outputs/010-qlora-trainer/verification-tests.log",
+    "Outputs/010-qlora-trainer/package-verification/verification.json"
+  ]
+}

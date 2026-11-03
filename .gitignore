@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv-training/
 .env
 *.egg-info/
 build/

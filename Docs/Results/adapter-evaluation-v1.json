@@ -1,0 +1,77 @@
+{
+  "status": "complete",
+  "samples": 124,
+  "official_score": false,
+  "base": {
+    "mean_local_score": 0.18736559139784947,
+    "hash_matches": 43,
+    "matched_calls": 83,
+    "predicted_calls": 339,
+    "positive_score_samples": 31,
+    "stop_reasons": {
+      "finished": 81,
+      "asked_missing_info": 9,
+      "deadline": 13,
+      "max_calls": 3,
+      "invalid_action": 18
+    },
+    "controller_errors_total": 71,
+    "schema_rejections": 0,
+    "business_failures": 18,
+    "ask_presence": {
+      "true_positive": 0,
+      "false_negative": 17,
+      "false_positive": 9
+    },
+    "latency_seconds": {
+      "mean": 13.59630645161275,
+      "p50": 11.84399999998277,
+      "p95": 29.79599999997299,
+      "max": 31.25
+    }
+  },
+  "adapter": {
+    "mean_local_score": 0.3213325652841782,
+    "hash_matches": 54,
+    "matched_calls": 144,
+    "predicted_calls": 261,
+    "positive_score_samples": 43,
+    "stop_reasons": {
+      "finished": 117,
+      "deadline": 5,
+      "invalid_action": 1,
+      "asked_missing_info": 1
+    },
+    "controller_errors_total": 3,
+    "schema_rejections": 0,
+    "business_failures": 13,
+    "ask_presence": {
+      "true_positive": 0,
+      "false_negative": 17,
+      "false_positive": 1
+    },
+    "latency_seconds": {
+      "mean": 11.882338709680498,
+      "p50": 10.0,
+      "p95": 26.20299999997951,
+      "max": 30.98499999998603
+    }
+  },
+  "improved": 31,
+  "regressed": 6,
+  "unchanged": 87,
+  "limitations": [
+    "Retrospective inner validation; not untouched holdout or outer-dev score.",
+    "Local scorer is not organiser-certified.",
+    "Sequential base-first timing is diagnostic.",
+    "Ask presence does not verify clarification wording.",
+    "BF16 inference differs from NF4 training backend."
+  ],
+  "verification": {
+    "base_trace_valid": true,
+    "adapter_trace_valid": true,
+    "base_replay_reproduced": 124,
+    "adapter_replay_reproduced": 124
+  },
+  "evidence": "Outputs/012-adapter-evaluation/run-20261102-01"
+}

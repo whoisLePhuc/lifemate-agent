@@ -1,0 +1,4 @@
+# Overlay for the frozen requirements-baseline.txt environment, Python 3.12.
+# See Docs/QLORA_TRAINING.md for isolation and the baseline .pth reuse procedure.
+peft==0.17.1
+bitsandbytes==0.48.1

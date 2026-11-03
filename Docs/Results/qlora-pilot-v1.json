@@ -1,0 +1,38 @@
+{
+  "status": "complete",
+  "optimizer_steps": 100,
+  "trainable_parameters": 33030144,
+  "validation_before": {
+    "rows": 392,
+    "supervised_tokens": 10817,
+    "token_mean_loss": 0.7373349712599367,
+    "row_mean_loss": 0.8604712309981031,
+    "teacher_forced": true,
+    "closed_loop_score": false
+  },
+  "validation_after": {
+    "rows": 392,
+    "supervised_tokens": 10817,
+    "token_mean_loss": 0.10873791766630177,
+    "row_mean_loss": 0.08911308425372598,
+    "teacher_forced": true,
+    "closed_loop_score": false
+  },
+  "reload": {
+    "state_tensors_exact": true,
+    "greedy_teacher_forced_ids_equal": true,
+    "loss_before_reload": 0.09264983981847763,
+    "loss_after_reload": 0.09264983981847763,
+    "backend": "same NF4 and kbit dtype preparation; BF16 inference parity not implied"
+  },
+  "dataset_manifest_sha256": "db1f9e9f28ef39022d7f058dfd73c265cc8d7b619fadb388395e72b4a58a94c9",
+  "final_adapter_sha256": "a676b50e932ae80956833bb1f360efc0a134b8bd72561085719403fa1c342fff",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+  "elapsed_seconds": 4009.307221099967,
+  "training_rows_processed": 400,
+  "fit_pool_rows": 3517,
+  "full_epoch": false,
+  "agent_quality_improvement_demonstrated": false,
+  "closed_loop_evaluation": "complete on 124 inner-validation IDs; see adapter-evaluation-v1.json",
+  "evidence": "Outputs/011-qlora-pilot/run-20261102-01"
+}

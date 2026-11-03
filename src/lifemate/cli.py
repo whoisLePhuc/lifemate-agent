@@ -13,6 +13,7 @@ COMMANDS = {
     'compare-policies': 'evaluation.compare_policies',
     'prepare-trajectories': 'training.prepare_trajectories',
     'audit-trajectories': 'training.audit_trajectories',
+    'train-sft': 'training.train_sft',
 }
 
 def main():

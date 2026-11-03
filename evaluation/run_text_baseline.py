@@ -21,6 +21,7 @@ from lifemate.context.manager import text_input
 from lifemate.agent.protocol import PROTOCOLS, system_prompt
 from lifemate.agent.policy import POLICIES
 from lifemate.observability.provenance import collect_provenance
+from lifemate.observability.provenance import file_hash
 from lifemate.observability.trace import TraceWriter, audit_trace, fingerprint
 
 
@@ -30,6 +31,7 @@ def main(argv=None):
     p.add_argument('--manifest',type=Path,required=True)
     p.add_argument('--output-dir',type=Path,required=True)
     p.add_argument('--model-path',type=Path)
+    p.add_argument('--adapter-path',type=Path,help='Optional local LoRA adapter; BF16 base remains unchanged')
     p.add_argument('--smoke-finish-only',action='store_true')
     p.add_argument('--limit',type=int)
     p.add_argument('--seconds',type=float,default=30)
@@ -39,6 +41,7 @@ def main(argv=None):
     p.add_argument('--ids-file',type=Path,help='JSON list of IDs restricted to the selected partition')
     args=p.parse_args(argv)
     if bool(args.model_path)==args.smoke_finish_only: p.error('choose model-path OR smoke-finish-only')
+    if args.adapter_path and args.smoke_finish_only:p.error('adapter-path requires actual model inference')
     if args.limit is not None and args.limit<1: p.error('limit must be positive')
     if args.limit is not None and args.ids_file: p.error('use limit OR ids-file')
     if args.seconds<=0: p.error('seconds must be positive')
@@ -64,12 +67,19 @@ def main(argv=None):
         chosen=sorted(selected)
     if not chosen:p.error('empty selected set')
     prompt=system_prompt(args.protocol,args.policy)
+    adapter_hashes=None
+    if args.adapter_path:
+        args.adapter_path=args.adapter_path.resolve()
+        if any(x.lower().endswith('_environment') for x in args.adapter_path.parts):p.error('forbidden adapter path')
+        adapter_hashes={name:file_hash(args.adapter_path/name) for name in ('adapter_config.json','adapter_model.safetensors')}
     provenance=collect_provenance(Path(__file__).resolve().parents[1],
         config={'workflow':'text-baseline','protocol':args.protocol,'policy':args.policy,'partition':args.partition,'seed':42,'seconds':args.seconds,
                 'max_decisions':12,'max_calls':8,'max_repairs':2,'context_tokens':16384,'new_tokens':384,
                 'decoding':'greedy','dtype':'bfloat16','attention':'sdpa',
                 'smoke_finish_only':args.smoke_finish_only,'chosen_ids_sha256':fingerprint(chosen),
                 'ids_file_sha256':sha256(ids_bytes).hexdigest() if ids_bytes else None,
+                'adapter_path':str(args.adapter_path) if args.adapter_path else None,
+                'adapter_files_sha256':adapter_hashes,
                 'trace_durable':True}, manifest=args.manifest, model_path=args.model_path, prompt=prompt)
     if args.smoke_finish_only:
         class FinishOnly:
@@ -78,7 +88,7 @@ def main(argv=None):
         planner=FinishOnly()
     else:
         from lifemate.agent.planner import LocalPlanner
-        planner=LocalPlanner(args.model_path)
+        planner=LocalPlanner(args.model_path,adapter_path=args.adapter_path)
         import torch
         provenance['hardware']={'gpu':torch.cuda.get_device_name(0),
                                 'cuda_runtime':torch.version.cuda,'parameters':planner.parameters}
@@ -143,6 +153,8 @@ def main(argv=None):
     (out/'trace_audit.json').write_text(json.dumps(trace_audit,indent=2),encoding='utf-8')
     if not trace_audit['valid']: raise RuntimeError('trace/ledger audit failed; inspect trace_audit.json')
     summary=validate_submission(out/'submission.jsonl',chosen)
+    if adapter_hashes and any(file_hash(args.adapter_path/name)!=digest for name,digest in adapter_hashes.items()):
+        raise RuntimeError('adapter files changed during inference')
     terminal={'finished','asked_missing_info'}
     report={'mode':'finish_only_plumbing_smoke' if args.smoke_finish_only else 'local_llm_gold_transcript_'+args.partition,
             'protocol':args.protocol,'policy':args.policy,'partition':args.partition,

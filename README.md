@@ -55,7 +55,9 @@ Independent prediction replay, a schema-aware **local fuzzy scorer** and per-dec
 
 ASR, organiser-scorer conformance and a complete competition deployment are not yet implemented.
 
-Custom-JSON SFT trajectory preparation and completion-only label audits are available: [trajectory dataset](Docs/TRAJECTORY_DATASET.md). The frozen outer train is split into 1,112 fit / 124 inner-validation samples, producing 3,517 / 392 next-action examples. All 3,909 rows pass tokenizer/mask audit; the 309 outer-dev IDs remain excluded. No model training has been performed.
+Custom-JSON SFT trajectory preparation and completion-only label audits are available: [trajectory dataset](Docs/TRAJECTORY_DATASET.md). The frozen outer train is split into 1,112 fit / 124 inner-validation samples, producing 3,517 / 392 next-action examples. All 3,909 rows pass tokenizer/mask audit; the 309 outer-dev IDs remain excluded. Dataset preparation itself does not train the model.
+
+A single-GPU QLoRA trainer and optional adapter inference are available: [training guide](Docs/QLORA_TRAINING.md). A real 4-step smoke fits the longest 10,099-token sequence in about 12.01 GiB peak reserved VRAM; saved adapter tensors reload exactly. All 110 tests pass. The 3-sample adapter pipeline smoke replays correctly but has a mean local score of zero. A subsequent 100-step pilot and paired evaluation on all 124 inner-validation samples are complete: mean local score improved from 0.18737 to 0.32133, while clarification recall remained 0/17. Both variants passed trace and independent replay checks. See [paired aggregate](Docs/Results/adapter-evaluation-v1.json). Full-epoch training and adapter evaluation on outer dev remain pending.
 
 An optional Qwen native tool-calling mode and a paired training diagnostic runner are implemented: [native tool-calling](Docs/NATIVE_TOOL_CALLING.md). The default remains `custom_json`; use `--protocol qwen_native` to opt in. History is represented as messages, never re-executed.
 
@@ -90,6 +92,7 @@ $env:PYTHONPATH = "$(Join-Path (Get-Location) 'src');$(Get-Location)"
 .venv/Scripts/python.exe -m lifemate.cli compare-policies --help
 .venv/Scripts/python.exe -m lifemate.cli prepare-trajectories --help
 .venv/Scripts/python.exe -m lifemate.cli audit-trajectories --help
+.venv-training/Scripts/python.exe -m lifemate.cli train-sft --help
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
