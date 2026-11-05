@@ -224,8 +224,9 @@ def main():
     if a.manifest and a.manifest_sha256 and file_hash(a.manifest) != a.manifest_sha256:
         raise SystemExit('split manifest hash changed: ' + str(a.manifest))
     a.data_root = a.data_root.resolve()
-    out.mkdir(parents=True)
+    # Load first: a failed model load must not leave an output directory that blocks the rerun.
     planner = load_planner(a.model_path, a.adapter_path)
+    out.mkdir(parents=True)
     (out / 'backend.json').write_text(json.dumps(backend_info(planner, a.adapter_path), indent=2))
     (run_dev if a.split == 'train' else run_test)(a, planner, out)
 

@@ -86,6 +86,33 @@ class AsrInputTest(unittest.TestCase):
         self.assertEqual(rows[0], {'id': 's1', 'request_sha256': r.text_sha('asr'), 'history_sha256': [r.text_sha('h')]})
 
 
+class MainTest(unittest.TestCase):
+    def argv(self, out):
+        return ['run-agent', '--split', 'public_test', '--data-root', 'd', '--model-path', 'm', '--adapter-path', 'a',
+                '--transcripts', 't.jsonl', '--output-dir', str(out)]
+
+    def test_a_failed_model_load_leaves_no_output_directory(self):
+        import sys
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / 'run'
+            with mock.patch.object(sys, 'argv', self.argv(out)), \
+                    mock.patch.object(r, 'load_planner', side_effect=RuntimeError('no model')):
+                with self.assertRaises(RuntimeError):
+                    r.main()
+            self.assertFalse(out.exists())
+
+    def test_oracle_is_refused_on_a_test_split_before_anything_loads(self):
+        import sys
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(sys, 'argv', [*self.argv(Path(d) / 'run'), '--mode', 'oracle']), \
+                mock.patch.object(r, 'load_planner') as load:
+            with self.assertRaises(SystemExit):
+                r.main()
+            load.assert_not_called()
+
+
 class RunSplitTest(unittest.TestCase):
     def run_split(self, scripts, transcripts, items=None):
         d = tempfile.TemporaryDirectory()

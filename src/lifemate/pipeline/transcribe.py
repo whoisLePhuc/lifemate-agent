@@ -83,10 +83,10 @@ def main():
 
     model_dir = a.model.resolve()
     model_hashes = {f.name: file_hash(f) for f in sorted(model_dir.iterdir()) if f.is_file()}
-    out.mkdir(parents=True)
     started = time.perf_counter()
     model = WhisperModel(str(model_dir), device='cuda', compute_type='float16')
     load_seconds = time.perf_counter() - started
+    out.mkdir(parents=True)  # after the load: a failed model load must not block the rerun
     infer = audio_total = 0.0
     empty = fallback = 0
     with (out / 'transcripts.jsonl').open('x', encoding='utf-8') as tx, \
