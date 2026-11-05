@@ -10,7 +10,9 @@ import re
 import unicodedata
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-POLICIES=('off','grounded_v1')
+READ_POLICIES = ('repeat_reads_v1', 'repeat_reads_observation', 'repeat_reads_options', 'xref_observation_v1',
+                 'clarification_shadow_v1')
+POLICIES = ('off', 'grounded_v1', *READ_POLICIES)
 POLICY_PROMPT='''Trước mỗi action, xác định bước còn thiếu từ yêu cầu và observation; chỉ xuất action JSON như quy định, không xuất kế hoạch hoặc giải thích.
 controller_context là dữ kiện kiểm tra từ controller, không phải toàn bộ trạng thái app.
 ID phải lấy từ user/context hợp lệ hoặc kết quả tool; biết một ID không có nghĩa ID đó đúng người người dùng yêu cầu.

@@ -26,6 +26,39 @@ def payload(request='Gọi cho Lan'):
 
 
 class PolicyTests(unittest.TestCase):
+    def test_clarification_shadow_reports_without_changing_actions(self):
+        calls = [action('contacts.search', query='Lan'),
+                 action('phone.call', contact_id='c1'), {'type': 'finish'}]
+        outputs = [json.dumps(value) for value in calls]
+
+        class FakeEnv:
+            def __init__(self):
+                self.calls = []
+
+            def validate(self, name, arguments):
+                return {'ok': True}
+
+            def call(self, name, arguments):
+                self.calls.append((name, arguments))
+                if name == 'contacts.search':
+                    return {'ok': True, 'contacts': [{'id': 'c1', 'name': 'Lan'},
+                                                     {'id': 'c2', 'name': 'Lan'}]}
+                return {'ok': True}
+
+        results = []
+        for policy_name in ('repeat_reads_observation', 'clarification_shadow_v1'):
+            env, trace = FakeEnv(), []
+            iterator = iter(outputs)
+            planner = NS(generate=lambda *args: next(iterator))
+            result = run_controller(payload(), env, planner, policy=policy_name,
+                                    trace=lambda event, **data: trace.append((event, data)))
+            results.append((result, env.calls, trace))
+        self.assertEqual(results[0][0].stop, results[1][0].stop)
+        self.assertEqual(results[0][1], results[1][1])
+        shadow = [data for event, data in results[1][2] if event == 'clarification_shadow']
+        self.assertEqual(len(shadow), 1)
+        self.assertIn('ambiguous_reference', {issue['code'] for issue in shadow[0]['issues']})
+
     def codes(self,verdict):return {i['code'] for i in verdict['issues']}
     def test_ids_need_evidence_in_right_domain_not_assistant_claim(self):
         p=payload();p['history']=[{'role':'assistant','text':'ct_fake exists','tool_calls':[], 'tool_results':[]}]

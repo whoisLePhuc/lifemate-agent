@@ -14,6 +14,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from lifemate.observability.provenance import file_hash
+from lifemate.agent.policy import READ_POLICIES
 
 CONFIG = {'protocol': 'custom_json', 'policy': 'off', 'seconds': 30.0}
 LIMITS = {'max_decisions': 12, 'max_calls': 8, 'max_repairs': 2}
@@ -111,10 +112,11 @@ def run_dev(args, planner, out):
     runner.main(['--data-root', str(args.data_root), '--manifest', str(args.manifest), '--model-path', str(args.model_path),
                  '--adapter-path', str(args.adapter_path), '--partition', 'dev', '--ids-file', str(args.ids_file),
                  '--output-dir', str(out / 'inference'), '--protocol', CONFIG['protocol'],
-                 '--policy', CONFIG['policy'], '--seconds', str(args.seconds)])
+                 '--policy', args.policy, '--seconds', str(args.seconds)])
 
 
-def run_split(items, transcripts, planner, make_env, out, *, split, backend, full_split, seconds=CONFIG['seconds']):
+def run_split(items, transcripts, planner, make_env, out, *, split, backend, full_split, seconds=CONFIG['seconds'],
+              policy=CONFIG['policy']):
     """Production loop: one ToolEnv per sample, transcripts only, no reference data anywhere.
 
     `make_env(sample_id)` must return a ToolEnvAdapter-like context manager. Writes the submission,
@@ -132,7 +134,7 @@ def run_split(items, transcripts, planner, make_env, out, *, split, backend, ful
     inf.mkdir(parents=True)
     journal = journal_to(out / 'inputs_used.jsonl')
     provenance = {'pipeline': 'asr-llm', 'split': split, 'input_mode': 'asr', **CONFIG, **LIMITS,
-                  'seconds': seconds, **backend}
+                  'seconds': seconds, 'policy': policy, **backend}
     (inf / 'provenance.json').write_text(json.dumps(provenance, ensure_ascii=False, indent=2))
     rows, records = [], []
     with TraceWriter(inf / 'trace.jsonl', inf.name) as trace, SubmissionWriter(inf / 'submission.jsonl', ids) as writer:
@@ -147,7 +149,7 @@ def run_split(items, transcripts, planner, make_env, out, *, split, backend, ful
                 t0 = time.monotonic()
                 try:
                     outcome = run_controller(payload, env, planner, seconds=seconds, trace=emit,
-                                             protocol=CONFIG['protocol'], policy=CONFIG['policy'])
+                                             protocol=CONFIG['protocol'], policy=policy)
                     failure = None
                 except (ValueError, RuntimeError) as error:
                     outcome = getattr(error, 'controller_outcome', None) or \
@@ -194,7 +196,8 @@ def run_test(args, planner, out):
             raise ValueError('ids outside split')
     backend = {**backend_info(planner, args.adapter_path), 'transcripts_sha256': file_hash(args.transcripts)}
     return run_split(items, transcripts, planner, lambda sid: ToolEnvAdapter(data_root, args.split, sid), out,
-                     split=args.split, backend=backend, full_split=not args.ids_file, seconds=args.seconds)
+                     split=args.split, backend=backend, full_split=not args.ids_file, seconds=args.seconds,
+                     policy=args.policy)
 
 
 def main():
@@ -210,6 +213,8 @@ def main():
     p.add_argument('--manifest', type=Path, help='split manifest that defines the dev partition (train only)')
     p.add_argument('--manifest-sha256', help='refuse to run if the manifest hash differs')
     p.add_argument('--seconds', type=float, default=CONFIG['seconds'], help='per-sample deadline')
+    p.add_argument('--policy', choices=('off', *READ_POLICIES), default='off',
+                   help='optional experimental repeated-read guard')
     p.add_argument('--output-dir', type=Path, required=True)
     a = p.parse_args()
     out = a.output_dir.resolve()

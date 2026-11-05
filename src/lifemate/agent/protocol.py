@@ -19,9 +19,9 @@ Nếu không tool nào đáp ứng, trả lời ngắn và không gọi tool. Ho
 def system_prompt(protocol,policy='off'):
     if protocol not in PROTOCOLS: raise ValueError('unknown agent protocol')
     if policy not in POLICIES:raise ValueError('unknown controller policy')
-    if policy!='off' and protocol!='custom_json':raise ValueError('grounded_v1 is evaluated on custom_json only')
+    if policy!='off' and protocol!='custom_json':raise ValueError('controller policies are evaluated on custom_json only')
     base=SYSTEM if protocol == 'custom_json' else NATIVE_SYSTEM
-    return base if policy=='off' else base+'\n'+POLICY_PROMPT
+    return base+'\n'+POLICY_PROMPT if policy=='grounded_v1' else base
 
 
 def data_json(value):
