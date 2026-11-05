@@ -10,7 +10,7 @@ import time
 from lifemate.agent.prompt import SYSTEM
 from lifemate.input.adapter import DatasetLoader, _parse
 from lifemate.observability.provenance import collect_provenance, file_hash
-from training.trajectories import inner_split, trajectory_rows
+from training.trajectories import explicit_inner_split, inner_split, trajectory_rows
 from training.loss_mask import encode_action, SequenceBudgetError, collate_actions
 
 
@@ -37,7 +37,7 @@ def write_json(path,data):
 
 
 def build_dataset(root,manifest,tokenizer,out,*,seen_ids=(),validation_fraction=.1,seed=43,
-                  max_length=16384,overflow_policy='quarantine'):
+                  max_length=16384,overflow_policy='quarantine',explicit_split=None):
     """Publish completion marker last. On failure retain partial diagnostics only."""
     root,out=safe_path(root),safe_path(out)
     if out.is_relative_to(root):raise ValueError('output must be outside Data')
@@ -45,7 +45,8 @@ def build_dataset(root,manifest,tokenizer,out,*,seen_ids=(),validation_fraction=
     if overflow_policy not in {'quarantine','error'}:raise ValueError('invalid overflow policy')
     if type(max_length) is not int or not 0<max_length<=16384:raise ValueError('invalid max length')
     verify_sources(root,manifest)
-    split=inner_split(manifest,validation_fraction=validation_fraction,seed=seed,seen_ids=seen_ids)
+    split=(explicit_inner_split(manifest,explicit_split) if explicit_split is not None else
+           inner_split(manifest,validation_fraction=validation_fraction,seed=seed,seen_ids=seen_ids))
     loader=DatasetLoader(root,'train',check_audio=False)
     observed={item.id for item in loader.iter_inputs()}
     if observed!=set(manifest['train_ids'])|set(manifest['dev_ids']):raise ValueError('manifest/metadata ID coverage differs')
@@ -126,11 +127,13 @@ def main(argv=None):
     p.add_argument('--model-path',type=Path,required=True,help='Local tokenizer; weights are not loaded')
     p.add_argument('--output-dir',type=Path,required=True)
     p.add_argument('--seen-ids',type=Path,action='append',default=[])
+    p.add_argument('--inner-split',type=Path,help='fixed inner split JSON (train_ids, validation_ids, outer_dev_ids); replaces --seen-ids/--seed/--validation-fraction')
     p.add_argument('--validation-fraction',type=float,default=.1)
     p.add_argument('--seed',type=int,default=43)
     p.add_argument('--max-length',type=int,default=16384)
     p.add_argument('--overflow-policy',choices=['error','quarantine'],default='quarantine')
     a=p.parse_args(argv)
+    if a.inner_split and (a.seen_ids or a.seed!=43 or a.validation_fraction!=.1):p.error('--inner-split excludes --seen-ids, --seed and --validation-fraction')
     root,out,model=safe_path(a.data_root),safe_path(a.output_dir),safe_path(a.model_path)
     manifest_path=safe_path(a.manifest);manifest_bytes=manifest_path.read_bytes();manifest=_parse(manifest_bytes.decode('utf-8-sig'))
     seen=set();seen_hashes=[]
@@ -139,18 +142,23 @@ def main(argv=None):
         if not isinstance(ids,list) or not all(isinstance(i,str) and i for i in ids) or len(ids)!=len(set(ids)):
             raise ValueError('seen-ids must contain a unique string ID list')
         seen.update(ids);seen_hashes.append(file_hash(path))
+    supplied=None;supplied_hash=None
+    if a.inner_split:
+        inner_path=safe_path(a.inner_split);supplied=_parse(inner_path.read_text(encoding='utf-8-sig'));supplied_hash=file_hash(inner_path)
     verify_sources(root,manifest)
     if not model.is_dir():raise ValueError('local tokenizer directory missing')
     if out.exists() or out.is_relative_to(root):raise ValueError('choose a new output outside Data')
     from transformers import AutoTokenizer
+    from training.qwen35 import patch_tokenizer_loading
+    patch_tokenizer_loading()  # no-op unless the tokenizer config is Qwen3.5
     tokenizer=AutoTokenizer.from_pretrained(model,local_files_only=True,trust_remote_code=False)
     provenance=collect_provenance(Path(__file__).resolve().parents[1],config={
         'workflow':'prepare-trajectories','protocol':'custom_json','policy':'off','seed':a.seed,
         'validation_fraction':a.validation_fraction,'max_length':a.max_length,
-        'seen_ids_sha256':seen_hashes,'overflow_policy':a.overflow_policy},
+        'seen_ids_sha256':seen_hashes,'inner_split_input_sha256':supplied_hash,'overflow_policy':a.overflow_policy},
         manifest=manifest_path,model_path=model,prompt=SYSTEM)
     report=build_dataset(root,manifest,tokenizer,out,seen_ids=seen,validation_fraction=a.validation_fraction,
-                         seed=a.seed,max_length=a.max_length,overflow_policy=a.overflow_policy)
+                         seed=a.seed,max_length=a.max_length,overflow_policy=a.overflow_policy,explicit_split=supplied)
     report['provenance']=provenance
     # Detect manifest edits, not only source-data edits, during generation.
     if manifest_path.read_bytes()!=manifest_bytes:raise ValueError('manifest changed during build')

@@ -14,6 +14,8 @@ COMMANDS = {
     'prepare-trajectories': 'training.prepare_trajectories',
     'audit-trajectories': 'training.audit_trajectories',
     'train-sft': 'training.train_sft',
+    'train-epoch': 'training.train_epoch',
+    'verify-resume': 'training.verify_resume',
 }
 
 def main():

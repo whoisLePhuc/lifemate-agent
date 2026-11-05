@@ -45,6 +45,26 @@ def inner_split(manifest,*,validation_fraction=.1,seed=43,seen_ids=()):
             'limitations':'Retrospective validation from previously inspected train; grouping is heuristic, not semantic proof.'}
 
 
+def explicit_inner_split(manifest,supplied):
+    """Validate a previously fixed inner split (for example one recovered from a completed run).
+
+    The supplied split must partition the outer train IDs exactly, reproduce the outer dev IDs
+    and keep every manifest group on one side. Nothing is re-derived from a seed.
+    """
+    train=unique_ids(manifest['train_ids'],'outer train');dev=unique_ids(manifest['dev_ids'],'outer dev')
+    if train&dev:raise ValueError('outer partitions overlap')
+    fit=unique_ids(supplied['train_ids'],'inner train');validation=unique_ids(supplied['validation_ids'],'inner validation')
+    if unique_ids(supplied['outer_dev_ids'],'supplied outer dev')!=dev:raise ValueError('supplied outer dev differs from manifest')
+    if fit&validation or fit|validation!=train:raise ValueError('inner split must partition outer train exactly')
+    groups=[sorted(g) for g in manifest['groups'] if set(g)<=train]
+    for group in groups:
+        if set(group)&fit and set(group)&validation:raise ValueError('group crosses the supplied inner split')
+    return {'schema_version':1,'seed':None,'validation_fraction_target':None,
+            'train_ids':sorted(fit),'validation_ids':sorted(validation),'outer_dev_ids':sorted(dev),
+            'seen_ids':[],'forced_train_ids':[],'groups':sorted(groups,key=lambda g:g[0]),
+            'limitations':'Explicit inner split supplied by the caller; grouping is heuristic, not semantic proof.'}
+
+
 def trajectory_rows(example):
     """Yield independent next-action examples. Never consult final_state."""
     item,ref=example.agent_input,example.reference

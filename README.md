@@ -67,6 +67,8 @@ An opt-in `grounded_v1` controller policy is available for custom JSON: [evidenc
 
 On the same 16 training diagnostic samples, policy improved ask-tool presence from 0/4 to 4/4, with one false positive, and reduced business-failure calls from 12 to 2. Mean local score decreased from 0.31875 to 0.28125; the policy has not been promoted. Train gold-prefix coverage also exposes valid trajectories that the heuristic guard rejects.
 
+Qwen3.5-4B one-epoch resumable QLoRA training (the recipe behind the adapter used by the ASR + LLM pipeline) is integrated: see [Qwen3.5 epoch training](Docs/QWEN35_EPOCH_TRAINING.md). Commands: `lifemate train-epoch`, `lifemate verify-resume`; `prepare-trajectories --inner-split` rebuilds a dataset from a fixed split. The recorded row order of the original run reproduces exactly and checkpoint resume is bit-exact in a GPU smoke; a full 880-step retraining has not been repeated.
+
 ## Data and Submission
 
 - Competition datasets and model weights are not included in this repository.

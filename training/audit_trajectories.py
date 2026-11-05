@@ -118,6 +118,8 @@ def main(argv=None):
     directory,output,model=safe_path(a.dataset_dir),safe_path(a.output),safe_path(a.model_path)
     if output.exists() or output.parent!=directory:raise ValueError('choose a new audit filename inside dataset-dir')
     from transformers import AutoTokenizer
+    from training.qwen35 import patch_tokenizer_loading
+    patch_tokenizer_loading()  # no-op unless the tokenizer config is Qwen3.5
     tokenizer=AutoTokenizer.from_pretrained(model,local_files_only=True,trust_remote_code=False)
     result=audit_dataset(directory,tokenizer,torch_probe=a.torch_probe)
     write_json(output,result)
