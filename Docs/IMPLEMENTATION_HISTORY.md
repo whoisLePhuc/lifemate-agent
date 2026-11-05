@@ -44,3 +44,9 @@ Baseline run 04 được thực hiện trước commit, nên source_commit lịc
 Run 01 là finish-only smoke; run 02 bị dừng do áp lực VRAM; run 03 thử 3 mẫu chunked prefill; run 04 là baseline đủ 309 mẫu. Công cụ tải range trong thử nghiệm 005 đã gặp timeout khi tải CUDA wheel và không cần cho luồng chạy chính; không chuyển công cụ đó vào repo agent. Người dùng đã cài dependencies và CUDA được xác minh. Download model phát triển hiện dùng `scripts/download_baseline_model.py`.
 
 49 tests và các workflow đã được xác minh trong các giai đoạn trước; bằng chứng dọn/xóa thử nghiệm được ghi riêng tại `Outputs/retire-experiments/run-20261102-01/`. Không coi smoke hoặc việc dọn source là một lần đánh giá chất lượng model mới.
+
+## Planner Qwen3.5 và kiểm chứng run (tích hợp 05/11/2026)
+
+- `lifemate.agent.qwen35_planner.Qwen35Planner` (từ thử nghiệm 015): dùng lại `LocalPlanner`, ép `enable_thinking=False` ở mọi lần render chat template, đặt EOS `<|im_end|>`/`<|endoftext|>` và ghi số tham số của checkpoint (từ chối nếu ≥ 5B). Cần `transformers>=5`; môi trường baseline cũ không import được module này. Tests: `tests/unit/test_qwen35_planner.py` (stub, không nạp model).
+- `evaluation.verify_run.verify_run` (từ thử nghiệm 019): audit lại trace, đối chiếu hash replay với submission, tính lại điểm từng mẫu và tóm tắt run. Tests: `tests/unit/test_verify_run.py` (run tổng hợp, gồm các trường hợp phải bị từ chối). Trên 3 run thật của pipeline ASR+LLM, kết quả giống hệt bản gốc.
+- 95 unit, 11 contract (2 skip), 14 integration test đạt. Pipeline sử dụng hai module này: `Experiments/023-asr-llm-pipeline/` trong workspace.
