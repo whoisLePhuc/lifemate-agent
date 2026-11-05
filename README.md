@@ -69,6 +69,8 @@ On the same 16 training diagnostic samples, policy improved ask-tool presence fr
 
 Qwen3.5-4B one-epoch resumable QLoRA training (the recipe behind the adapter used by the ASR + LLM pipeline) is integrated: see [Qwen3.5 epoch training](Docs/QWEN35_EPOCH_TRAINING.md). Commands: `lifemate train-epoch`, `lifemate verify-resume`; `prepare-trajectories --inner-split` rebuilds a dataset from a fixed split. The recorded row order of the original run reproduces exactly and checkpoint resume is bit-exact in a GPU smoke; a full 880-step retraining has not been repeated.
 
+The audio-to-submission pipeline (ASR, Qwen3.5 agent, ToolEnv, validator) is available as one command: see [ASR + LLM pipeline](Docs/ASR_LLM_PIPELINE.md). `lifemate predict` writes a validated `submission.jsonl` for a test split; `lifemate transcribe` and `lifemate run-agent` run its two stages separately. Optional dependency groups: `asr`, `llm`, `train`.
+
 ## Data and Submission
 
 - Competition datasets and model weights are not included in this repository.

@@ -4,10 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lifemate-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "LifeMate agent, data preparation and evaluation tools"
 requires-python = ">=3.10"
 dependencies = []
+
+# The core (data loader, ToolEnv adapter, controller, scorer, submission writer) uses only the
+# standard library. Heavy stacks are optional and usually live in separate environments; the
+# requirements-*.lock.txt files pin the exact versions that were verified.
+[project.optional-dependencies]
+asr = ["faster-whisper==1.2.1", "ctranslate2==4.8.5", "av>=12,<15",
+       "nvidia-cublas-cu12", "nvidia-cudnn-cu12==9.*"]
+llm = ["torch>=2.8", "transformers>=5.22", "peft>=0.21", "accelerate", "flash-linear-attention>=0.5"]
+train = ["torch>=2.8", "transformers>=5.22", "peft>=0.21", "accelerate", "flash-linear-attention>=0.5",
+         "bitsandbytes>=0.50"]
 
 [tool.setuptools.packages.find]
 where = ["src", "."]

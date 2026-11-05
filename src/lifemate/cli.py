@@ -16,6 +16,9 @@ COMMANDS = {
     'train-sft': 'training.train_sft',
     'train-epoch': 'training.train_epoch',
     'verify-resume': 'training.verify_resume',
+    'transcribe': 'lifemate.pipeline.transcribe',
+    'run-agent': 'lifemate.pipeline.run_agent',
+    'predict': 'lifemate.pipeline.predict',
 }
 
 def main():
