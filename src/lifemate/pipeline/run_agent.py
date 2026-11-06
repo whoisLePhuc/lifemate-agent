@@ -15,6 +15,7 @@ from pathlib import Path
 
 from lifemate.observability.provenance import file_hash
 from lifemate.agent.policy import READ_POLICIES
+from lifemate.agent.protocol import LANGS
 
 CONFIG = {'protocol': 'custom_json', 'policy': 'off', 'seconds': 30.0}
 LIMITS = {'max_decisions': 12, 'max_calls': 8, 'max_repairs': 2}
@@ -64,22 +65,28 @@ def asr_text_input(original, transcripts, journal=None):
     return build
 
 
-def load_planner(model_path, adapter_path):
+def load_planner(model_path, adapter_path, *, thinking=False, think_budget=1024):
     import torch
     from lifemate.agent.qwen35_planner import Qwen35Planner
-    planner = Qwen35Planner(model_path, adapter_path=adapter_path)
-    planner.model = planner.model.merge_and_unload().eval()
+    planner = Qwen35Planner(model_path, adapter_path=adapter_path, thinking=thinking, think_budget=think_budget)
+    if adapter_path is not None:
+        planner.model = planner.model.merge_and_unload().eval()
     planner.parameters = sum(p.numel() for p in planner.model.parameters())
     if planner.parameters >= 5_000_000_000:
         raise ValueError('merged model exceeds parameter limit')
     saved = planner.new_tokens; planner.new_tokens = 8
+    saved_thinking, planner.thinking = planner.thinking, False   # warm-up must not enter thinking
     planner.generate([{'role': 'user', 'content': 'Reply with one short word.'}], 60)
-    planner.new_tokens = saved
+    planner.new_tokens = saved; planner.thinking = saved_thinking
     torch.cuda.synchronize()
     return planner
 
 
 def backend_info(planner, adapter_path):
+    packages = {n: importlib.metadata.version(n) for n in ['torch', 'transformers', 'peft']}
+    if adapter_path is None:
+        return {'model': 'Qwen3.5-4B base (no adapter; evaluation control)', 'adapter': None,
+                'loaded_parameters': planner.parameters, 'packages': packages}
     adapter = Path(adapter_path)
     return {'model': 'Qwen3.5-4B + merged LoRA adapter', 'adapter': str(adapter),
             'adapter_files_sha256': {n: file_hash(adapter / n) for n in ('adapter_config.json', 'adapter_model.safetensors')},
@@ -107,12 +114,14 @@ def run_dev(args, planner, out):
     def provenance(repo, *, config, **kwargs):
         return original(repo, config={**config, 'pipeline': 'asr-llm', 'input_mode': args.mode,
                                       'transcripts_sha256': file_hash(args.transcripts) if args.transcripts else None,
-                                      'merged': True, 'thinking': 'disabled'}, **kwargs)
+                                      'merged': bool(args.adapter_path), 'thinking': 'enabled' if planner.thinking else 'disabled'}, **kwargs)
     runner.collect_provenance = provenance
     runner.main(['--data-root', str(args.data_root), '--manifest', str(args.manifest), '--model-path', str(args.model_path),
-                 '--adapter-path', str(args.adapter_path), '--partition', 'dev', '--ids-file', str(args.ids_file),
-                 '--output-dir', str(out / 'inference'), '--protocol', CONFIG['protocol'],
-                 '--policy', args.policy, '--seconds', str(args.seconds)])
+                 *(['--adapter-path', str(args.adapter_path)] if args.adapter_path else []), '--partition', args.partition, '--ids-file', str(args.ids_file),
+                 '--output-dir', str(out / 'inference'), '--protocol', args.protocol,
+                 '--policy', args.policy, '--seconds', str(args.seconds), '--prompt-lang', args.prompt_lang,
+                 '--thinking', 'on' if planner.thinking else 'off',
+                 '--think-budget', str(planner.think_budget if planner.thinking else 0)])
 
 
 def run_split(items, transcripts, planner, make_env, out, *, split, backend, full_split, seconds=CONFIG['seconds'],
@@ -207,7 +216,7 @@ def main():
     p.add_argument('--mode', choices=['asr', 'oracle'], default='asr')
     p.add_argument('--data-root', type=Path, required=True)
     p.add_argument('--model-path', type=Path, required=True, help='Qwen3.5-4B base model directory')
-    p.add_argument('--adapter-path', type=Path, required=True, help='LoRA adapter directory')
+    p.add_argument('--adapter-path', type=Path, help='LoRA adapter directory (omit only for train/dev base-model controls)')
     p.add_argument('--transcripts', type=Path)
     p.add_argument('--ids-file', type=Path, help='dev IDs (train) or a smoke subset (test splits)')
     p.add_argument('--manifest', type=Path, help='split manifest that defines the dev partition (train only)')
@@ -215,6 +224,14 @@ def main():
     p.add_argument('--seconds', type=float, default=CONFIG['seconds'], help='per-sample deadline')
     p.add_argument('--policy', choices=('off', *READ_POLICIES), default='off',
                    help='optional experimental repeated-read guard')
+    p.add_argument('--protocol', choices=('custom_json', 'qwen35_native'), default=CONFIG['protocol'],
+                   help='experimental: Qwen3.5 XML tool calling (evaluation on train/dev only)')
+    p.add_argument('--prompt-lang', choices=LANGS, default='vi', help='experimental system-prompt language')
+    p.add_argument('--thinking', choices=('off', 'on'), default='off', help='experimental Qwen3.5 thinking mode')
+    p.add_argument('--think-budget', type=int, default=1024, help='thinking tokens before </think> is forced')
+    p.add_argument('--partition', choices=('dev', 'train'), default='dev',
+                   help="dev: logical outer dev. train: only the frozen 124 inner-validation IDs (--inner-split)")
+    p.add_argument('--inner-split', type=Path, help='inner_split.json defining the 124 validation IDs (partition train)')
     p.add_argument('--output-dir', type=Path, required=True)
     a = p.parse_args()
     out = a.output_dir.resolve()
@@ -228,9 +245,22 @@ def main():
         raise SystemExit('train/dev run needs --ids-file and --manifest')
     if a.manifest and a.manifest_sha256 and file_hash(a.manifest) != a.manifest_sha256:
         raise SystemExit('split manifest hash changed: ' + str(a.manifest))
+    if a.adapter_path is None and a.split != 'train':
+        raise SystemExit('test splits require --adapter-path; base-model runs are train/dev controls only')
+    experimental = (a.protocol, a.prompt_lang, a.thinking, a.partition) != (CONFIG['protocol'], 'vi', 'off', 'dev')
+    if experimental and a.split != 'train':
+        raise SystemExit('experimental protocol/language/thinking/partition options are train/dev evaluation only')
+    if a.partition == 'train':
+        if not (a.inner_split and a.ids_file):
+            raise SystemExit('partition train needs --inner-split and --ids-file')
+        validation = json.loads(a.inner_split.read_text()).get('validation_ids')
+        if not isinstance(validation, list) or not set(json.loads(a.ids_file.read_text())) <= set(validation):
+            raise SystemExit('partition train is restricted to inner-validation IDs')
+    if a.thinking == 'on' and a.think_budget < 1:
+        raise SystemExit('think-budget must be positive')
     a.data_root = a.data_root.resolve()
     # Load first: a failed model load must not leave an output directory that blocks the rerun.
-    planner = load_planner(a.model_path, a.adapter_path)
+    planner = load_planner(a.model_path, a.adapter_path, thinking=a.thinking == 'on', think_budget=a.think_budget)
     out.mkdir(parents=True)
     (out / 'backend.json').write_text(json.dumps(backend_info(planner, a.adapter_path), indent=2))
     (run_dev if a.split == 'train' else run_test)(a, planner, out)

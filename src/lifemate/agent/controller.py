@@ -2,7 +2,7 @@ import json
 import time
 
 from lifemate.contracts import Outcome
-from .protocol import build_messages, parse_output, system_prompt, tool_schemas
+from .protocol import NATIVE_PROTOCOLS, build_messages, parse_output, system_prompt, tool_schemas
 from .policy import GroundedPolicy, READ_POLICIES
 
 
@@ -51,8 +51,9 @@ def recovery_options(tool, observation, tools_by_name):
 
 
 def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_calls=8, max_repairs=2,
-                   trace=None, protocol='custom_json',policy='off'):
-    system_prompt(protocol,policy)
+                   trace=None, protocol='custom_json',policy='off',lang='vi'):
+    system_prompt(protocol,policy,lang)
+    native=protocol in NATIVE_PROTOCOLS
     guard=GroundedPolicy(payload) if policy=='grounded_v1' else None
     shadow = GroundedPolicy(payload) if policy == 'clarification_shadow_v1' else None
     repeat_reads = policy in READ_POLICIES
@@ -60,7 +61,7 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
     tools_by_name = {tool['name']: tool for tool in payload['tools']}
     successful_reads = {}
     recovery_attempted = False
-    planner_kwargs={'tools':tool_schemas(payload)} if protocol=='qwen_native' else {}
+    planner_kwargs={'tools':tool_schemas(payload)} if native else {}
     start=time.monotonic(); deadline=start+seconds
     events=[]; errors=calls=decisions=0; stop='max_decisions'
     allowed={t['name'] for t in payload['tools']}
@@ -85,7 +86,7 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         try:
             model_payload=payload if guard is None else {
                 **{k:payload[k] for k in ('request','context','history','tools')},'controller_context':guard.summary()}
-            raw=planner.generate(build_messages(model_payload,events,protocol,policy), remaining-.3, **planner_kwargs)
+            raw=planner.generate(build_messages(model_payload,events,protocol,policy,lang), remaining-.3, **planner_kwargs)
         except TimeoutError as error:
             emit('generation', raw_output=getattr(planner,'last_generation',{}).get('partial_output'),
                  error_type=type(error).__name__, error_category='deadline',
@@ -104,15 +105,15 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
         if time.monotonic() >= deadline-.2: stop='deadline'; break
         try:
             # A cut-off native text response is not evidence of a deliberate finish.
-            if protocol=='qwen_native' and getattr(planner,'last_generation',{}).get('finish_reason')=='token_limit':
+            if native and getattr(planner,'last_generation',{}).get('finish_reason')=='token_limit':
                 raise ValueError('native response reached token limit; do not dispatch partial output')
-            action=parse_output(raw,protocol)
+            action=parse_output(raw,protocol,tools_by_name)
         except (ValueError,TypeError,RecursionError) as error:
             emit('parse_error', raw_output=raw, error_type=type(error).__name__,
                  error_message=str(error), error_category='parse_error')
             errors+=1
             feedback={'validation_error':'Output must be one valid action JSON object.'}
-            if protocol=='qwen_native':
+            if native:
                 feedback={'validation_error':str(error),'raw_output':raw}
             events.append(feedback)
             if errors>max_repairs: stop='invalid_action'; break
@@ -134,7 +135,7 @@ def run_controller(payload, env, planner, *, seconds=30, max_decisions=12, max_c
             if guard is not None:guard.validation_failed(action)
             errors+=1
             feedback={'action':action,'validation_error':valid.get('error')}
-            if protocol=='qwen_native': feedback['raw_output']=raw
+            if native: feedback['raw_output']=raw
             events.append(feedback)
             if errors>max_repairs: stop='validation_limit'; break
             continue

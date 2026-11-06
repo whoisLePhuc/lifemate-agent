@@ -74,6 +74,10 @@ class LocalPlanner:
             self.last_generation['new_tokens']=len(self._generated)
             self.last_generation['partial_output']=self._decode_generated()
 
+    def _choose(self, token, generated):
+        """Hook for subclasses to override the greedy token (default: keep it)."""
+        return token
+
     def _decode_generated(self):
         return self.tokenizer.decode(self._generated,skip_special_tokens=self._active_tools is None).strip()
 
@@ -107,7 +111,7 @@ class LocalPlanner:
             self._generation_stage='decode'; self._stage_started=time.perf_counter()
             for step in range(self.new_tokens):
                 if time.monotonic() >= deadline: raise TimeoutError('decode deadline')
-                token=output.logits[:,-1,:].argmax(dim=-1).item()
+                token=self._choose(output.logits[:,-1,:].argmax(dim=-1).item(),generated)
                 if token in eos:
                     self.last_generation['finish_reason']='eos'
                     break

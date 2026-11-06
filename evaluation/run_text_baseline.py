@@ -18,7 +18,7 @@ from evaluation.replay import TrainReplaySession
 from lifemate.output.writer import SubmissionWriter, validate_submission
 from lifemate.agent.controller import run_controller
 from lifemate.context.manager import text_input
-from lifemate.agent.protocol import PROTOCOLS, system_prompt
+from lifemate.agent.protocol import LANGS, NATIVE_PROTOCOLS, PROTOCOLS, system_prompt
 from lifemate.agent.policy import POLICIES
 from lifemate.observability.provenance import collect_provenance
 from lifemate.observability.provenance import file_hash
@@ -37,6 +37,9 @@ def main(argv=None):
     p.add_argument('--seconds',type=float,default=30)
     p.add_argument('--protocol',choices=PROTOCOLS,default='custom_json')
     p.add_argument('--policy',choices=POLICIES,default='off')
+    p.add_argument('--prompt-lang',choices=LANGS,default='vi')
+    p.add_argument('--thinking',choices=('off','on'),default='off',help='recorded in provenance; the planner is built by the caller')
+    p.add_argument('--think-budget',type=int,default=0)
     p.add_argument('--partition',choices=['train','dev'],default='dev')
     p.add_argument('--ids-file',type=Path,help='JSON list of IDs restricted to the selected partition')
     args=p.parse_args(argv)
@@ -66,14 +69,14 @@ def main(argv=None):
         if len(selected)!=len(set(selected)) or not set(selected)<=set(partition_ids):p.error('IDs must be unique and inside the selected partition')
         chosen=sorted(selected)
     if not chosen:p.error('empty selected set')
-    prompt=system_prompt(args.protocol,args.policy)
+    prompt=system_prompt(args.protocol,args.policy,args.prompt_lang)
     adapter_hashes=None
     if args.adapter_path:
         args.adapter_path=args.adapter_path.resolve()
         if any(x.lower().endswith('_environment') for x in args.adapter_path.parts):p.error('forbidden adapter path')
         adapter_hashes={name:file_hash(args.adapter_path/name) for name in ('adapter_config.json','adapter_model.safetensors')}
     provenance=collect_provenance(Path(__file__).resolve().parents[1],
-        config={'workflow':'text-baseline','protocol':args.protocol,'policy':args.policy,'partition':args.partition,'seed':42,'seconds':args.seconds,
+        config={'workflow':'text-baseline','protocol':args.protocol,'policy':args.policy,'prompt_lang':args.prompt_lang,'thinking':args.thinking,'think_budget':args.think_budget,'partition':args.partition,'seed':42,'seconds':args.seconds,
                 'max_decisions':12,'max_calls':8,'max_repairs':2,'context_tokens':16384,'new_tokens':384,
                 'decoding':'greedy','dtype':'bfloat16','attention':'sdpa',
                 'smoke_finish_only':args.smoke_finish_only,'chosen_ids_sha256':fingerprint(chosen),
@@ -84,7 +87,7 @@ def main(argv=None):
     if args.smoke_finish_only:
         class FinishOnly:
             def generate(self,messages,seconds,**kwargs):
-                return 'Hoàn tất.' if args.protocol=='qwen_native' else '{"type":"finish"}'
+                return 'Hoàn tất.' if args.protocol in NATIVE_PROTOCOLS else '{"type":"finish"}'
         planner=FinishOnly()
     else:
         from lifemate.agent.planner import LocalPlanner
@@ -108,7 +111,7 @@ def main(argv=None):
             with TrainReplaySession(root,item.id) as env:
                 controller_start=time.monotonic()
                 try:
-                    outcome=run_controller(payload,env,planner,seconds=args.seconds,trace=emit,protocol=args.protocol,policy=args.policy)
+                    outcome=run_controller(payload,env,planner,seconds=args.seconds,trace=emit,protocol=args.protocol,policy=args.policy,lang=args.prompt_lang)
                     failure=None
                 except (ValueError,RuntimeError) as error:
                     # Hashing after an indeterminate runtime failure will raise: no fake record.
